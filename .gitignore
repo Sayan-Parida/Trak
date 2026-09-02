@@ -1,0 +1,47 @@
+# Maven build output
+backend/target/
+
+# Local SQLite runtime data
+backend/data/*.db
+backend/data/*.db-wal
+backend/data/*.db-shm
+
+# Node dependencies
+**/node_modules/
+frontend/node_modules/
+extension/node_modules/
+
+# Frontend build output and caches
+frontend/dist/
+frontend/.vite/
+
+# Extension build output
+extension/dist/
+
+# TypeScript incremental build state
+**/*.tsbuildinfo
+frontend/*.tsbuildinfo
+extension/*.tsbuildinfo
+
+# IDE and editor files
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment and secret files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+
+# Local logs
+*.log
