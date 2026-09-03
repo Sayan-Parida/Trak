@@ -203,8 +203,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.local.get(['sessionState']).then(async data => {
       const sessionId = data.sessionState?.sessionId;
       if (sessionId) {
-        await api.endSession(sessionId);
-        await chrome.storage.local.set({ sessionState: { sessionId: null, sessionTitle: null, isActive: false } });
+        const success = await api.endSession(sessionId);
+        if (success) {
+          await chrome.storage.local.set({ sessionState: { sessionId: null, sessionTitle: null, isActive: false } });
+        } else {
+          console.error(`Failed to end session ${sessionId}; preserving local session state`);
+        }
+        sendResponse({ success });
+        return;
       }
       sendResponse({ success: true });
     });
