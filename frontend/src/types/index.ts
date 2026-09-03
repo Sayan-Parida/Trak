@@ -59,3 +59,27 @@ export interface MindMapData {
   nodes: MindMapNode[];
   edges: MindMapEdge[];
 }
+
+export interface ResearchGraphNode {
+  id: string;
+  type: string;
+  label: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface ResearchGraphEdge {
+  source: string;
+  target: string;
+  relationshipType: string;
+  confidence: number;
+  reason: string;
+  sourceTimestamp: string | null;
+  targetTimestamp: string | null;
+  metadata: Record<string, unknown>;
+}
+
+export interface ResearchGraphData {
+  sessionId: string;
+  nodes: ResearchGraphNode[];
+  edges: ResearchGraphEdge[];
+}

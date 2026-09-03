@@ -2,7 +2,7 @@
 
 Trak is a local-first research activity tracker. Its Chrome extension captures browser activity during manually started research sessions, a Spring Boot API stores and processes the events, and a React dashboard presents the resulting timeline, visited pages, searches, and interactive mind map.
 
-The current application code and UI use the name `ResearchMind`.
+The application is named `Trak`.
 
 ## Why Trak?
 
@@ -64,7 +64,7 @@ Chrome Extension
 			 v
 Spring Boot API (localhost:8080)
 			 |
-			 +------> SQLite (backend/data/researchmind.db)
+			 +------> SQLite (backend/data/trak.db)
 			 |
 			 | REST API
 			 v
@@ -97,7 +97,7 @@ For more detail, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/DATA
 │   ├── pom.xml
 │   ├── data/                         SQLite database directory
 │   └── src/
-│       ├── main/java/com/researchmind/
+│       ├── main/java/com/trak/
 │       │   ├── api/                  REST controllers, DTOs, and mappers
 │       │   ├── config/               Database and web configuration
 │       │   ├── domain/               JPA models and repositories
@@ -137,7 +137,7 @@ cd backend
 mvn spring-boot:run
 ```
 
-The API starts on `http://localhost:8080`. The SQLite database is created at `backend/data/researchmind.db` when the backend is run from the `backend` directory.
+The API starts on `http://localhost:8080`. The SQLite database is created at `backend/data/trak.db` when the backend is run from the `backend` directory.
 
 Check that the service is available:
 

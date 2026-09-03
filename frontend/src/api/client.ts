@@ -1,4 +1,4 @@
-import { Session, PageVisit, SearchQuery, TimelineEntry, MindMapData } from '../types';
+import { Session, PageVisit, SearchQuery, TimelineEntry, MindMapData, ResearchGraphData } from '../types';
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, options);
@@ -25,4 +25,5 @@ export const apiClient = {
   getPages: (id: string) => fetchJson<PageVisit[]>(`/api/sessions/${id}/pages`),
   getSearches: (id: string) => fetchJson<SearchQuery[]>(`/api/sessions/${id}/searches`),
   getMindMap: (id: string) => fetchJson<MindMapData>(`/api/sessions/${id}/mindmap`)
+  ,getResearchGraph: (id: string) => fetchJson<ResearchGraphData>(`/api/sessions/${id}/research-graph`)
 };

@@ -1,8 +1,8 @@
-# ResearchMind — Architecture
+# Trak — Architecture
 
 ## Overview
 
-ResearchMind is a local-first application that captures browser research activity and visualizes it as an interactive mind map. The system is composed of three main components that communicate over HTTP on localhost.
+Trak is a local-first application that captures browser research activity and visualizes it as an interactive research map. The system is composed of three main components that communicate over HTTP on localhost.
 
 ## Component Diagram
 
@@ -58,7 +58,7 @@ ResearchMind is a local-first application that captures browser research activit
 ┌──────────────────┼──────────────────────────────────┐
 │  SQLite          │                                   │
 │  ┌───────────────▼───────────────────────────────┐  │
-│  │  researchmind.db                              │  │
+│  │  trak.db                                       │  │
 │  │   browser_event | research_session            │  │
 │  │   page_visit    | search_query                │  │
 │  └───────────────────────────────────────────────┘  │

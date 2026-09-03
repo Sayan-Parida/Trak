@@ -1,8 +1,8 @@
-# ResearchMind — Database Schema
+# Trak — Database Schema
 
 ## Overview
 
-ResearchMind uses SQLite in WAL (Write-Ahead Logging) mode for concurrent read access. The database file is stored at `backend/data/researchmind.db`.
+Trak uses SQLite in WAL (Write-Ahead Logging) mode for concurrent read access. The database file is stored at `backend/data/trak.db`.
 
 ## Tables
 

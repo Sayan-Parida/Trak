@@ -91,23 +91,21 @@ export default function MindMap({ sessionId }: Props) {
   useEffect(() => {
     const fetchMap = async () => {
       try {
-        const data = await apiClient.getMindMap(sessionId);
+        const data = await apiClient.getResearchGraph(sessionId);
         
         const initialNodes: Node[] = data.nodes.map(n => ({
           id: n.id,
           type: 'custom',
           position: { x: 0, y: 0 },
-          data: {
-            ...n
-          }
+          data: { ...n, domain: n.metadata.domain }
         }));
 
         const initialEdges: Edge[] = data.edges.map(e => ({
-          id: `${e.source}-${e.target}`,
+          id: `${e.source}-${e.target}-${e.relationshipType}`,
           source: e.source,
           target: e.target,
-          label: e.relationship,
-          animated: e.relationship === 'SEARCH_RESULT',
+          label: e.relationshipType,
+          animated: e.relationshipType === 'SEARCH_RESULT',
           style: { stroke: '#64748b' }
         }));
 

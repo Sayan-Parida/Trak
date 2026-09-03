@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ResearchMind",
+  "name": "Trak",
   "version": "0.1.0",
   "description": "Capture and visualize your research journey",
   "permissions": ["tabs", "webNavigation", "storage", "alarms"],
@@ -10,6 +10,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "ResearchMind"
+    "default_title": "Trak"
   }
 }

@@ -8,11 +8,11 @@
         <version>3.4.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.researchmind</groupId>
-    <artifactId>researchmind-backend</artifactId>
+    <groupId>com.trak</groupId>
+    <artifactId>trak-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>researchmind-backend</name>
-    <description>ResearchMind Backend Application</description>
+    <name>trak-backend</name>
+    <description>Trak Backend Application</description>
     <properties>
         <java.version>17</java.version>
     </properties>

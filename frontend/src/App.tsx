@@ -57,7 +57,7 @@ export default function App() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center p-8 max-w-md">
               <div className="text-4xl mb-4">🧠</div>
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome to ResearchMind</h1>
+              <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Trak</h1>
               <p className="text-gray-600">Select a session from the sidebar to view its mind map, timeline, and visited pages.</p>
             </div>
           </div>
@@ -68,7 +68,7 @@ export default function App() {
                 onClick={() => setActiveTab('mindmap')}
                 className={`pb-2 border-b-2 font-medium text-sm transition-colors ${activeTab === 'mindmap' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
               >
-                Mind Map
+                Research Map
               </button>
               <button 
                 onClick={() => setActiveTab('timeline')}
