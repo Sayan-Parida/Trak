@@ -12,7 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -65,27 +67,51 @@ public class PageVisitService {
 
     @Transactional
     public void estimateDuration(String sessionId) {
+        estimateDuration(sessionId, null);
+    }
+
+    @Transactional
+    public void estimateDuration(String sessionId, Instant endTime) {
         List<BrowserEvent> events = browserEventRepository.findBySessionIdOrderByTimestamp(sessionId);
-        
-        Instant currentActivationTime = null;
-        String currentUrl = null;
-        
+
+        Map<Integer, TabTiming> timingByTab = new HashMap<>();
+        Integer activeTabId = null;
+
         for (BrowserEvent event : events) {
-            if (event.getEventType() == EventType.TAB_ACTIVATED || event.getEventType() == EventType.NAVIGATION) {
-                if (currentActivationTime != null && currentUrl != null) {
-                    addDuration(currentUrl, sessionId, Duration.between(currentActivationTime, event.getTimestamp()).toMillis());
+            if (event.getEventType() == EventType.TAB_ACTIVATED) {
+                if (activeTabId != null) {
+                    finalizeTab(activeTabId, event.getTimestamp(), sessionId, timingByTab);
+                    timingByTab.remove(activeTabId);
                 }
-                currentActivationTime = event.getTimestamp();
-                currentUrl = event.getUrl();
+                activeTabId = event.getTabId();
+                timingByTab.put(event.getTabId(), new TabTiming(event.getTimestamp(), event.getUrl()));
+            } else if (event.getEventType() == EventType.NAVIGATION) {
+                if (activeTabId != null && activeTabId == event.getTabId()) {
+                    finalizeTab(event.getTabId(), event.getTimestamp(), sessionId, timingByTab);
+                    timingByTab.put(event.getTabId(), new TabTiming(event.getTimestamp(), event.getUrl()));
+                }
             } else if (event.getEventType() == EventType.TAB_CLOSED) {
-                if (currentActivationTime != null && currentUrl != null && currentUrl.equals(event.getUrl())) {
-                    addDuration(currentUrl, sessionId, Duration.between(currentActivationTime, event.getTimestamp()).toMillis());
-                    currentActivationTime = null;
-                    currentUrl = null;
+                finalizeTab(event.getTabId(), event.getTimestamp(), sessionId, timingByTab);
+                timingByTab.remove(event.getTabId());
+                if (event.getTabId() == activeTabId) {
+                    activeTabId = null;
                 }
             }
         }
+
+        if (endTime != null && activeTabId != null) {
+            finalizeTab(activeTabId, endTime, sessionId, timingByTab);
+        }
     }
+
+    private void finalizeTab(int tabId, Instant timestamp, String sessionId, Map<Integer, TabTiming> timingByTab) {
+        TabTiming timing = timingByTab.get(tabId);
+        if (timing != null && timing.url() != null) {
+            addDuration(timing.url(), sessionId, Duration.between(timing.startedAt(), timestamp).toMillis());
+        }
+    }
+
+    private record TabTiming(Instant startedAt, String url) {}
 
     private void addDuration(String url, String sessionId, long ms) {
         if (ms <= 0) return;

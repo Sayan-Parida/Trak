@@ -42,6 +42,16 @@ class SessionControllerTest {
     }
 
     @Test
+    void createSessionWithoutTitle() throws Exception {
+        mockMvc.perform(post("/api/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").doesNotExist())
+                .andExpect(jsonPath("$.status").value("ACTIVE"));
+    }
+
+    @Test
     void getSession() throws Exception {
         ResearchSession session = sessionService.createSession("Test Session for Get");
 
@@ -70,4 +80,26 @@ class SessionControllerTest {
         mockMvc.perform(get("/api/sessions/non-existent-id"))
                 .andExpect(status().isNotFound());
     }
+
+        @Test
+        void getPagesAndSearchesNotFound() throws Exception {
+        mockMvc.perform(get("/api/sessions/non-existent-id/pages"))
+            .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/sessions/non-existent-id/searches"))
+            .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void getPagesAndSearchesForEmptySession() throws Exception {
+        ResearchSession session = sessionService.createSession("Empty Session");
+
+        mockMvc.perform(get("/api/sessions/" + session.getId() + "/pages"))
+            .andExpect(status().isOk())
+            .andExpect(content().json("[]"));
+
+        mockMvc.perform(get("/api/sessions/" + session.getId() + "/searches"))
+            .andExpect(status().isOk())
+            .andExpect(content().json("[]"));
+        }
 }

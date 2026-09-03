@@ -71,7 +71,7 @@ public class ResearchSessionService {
         if (status != null && !status.isBlank()) {
             if ("COMPLETED".equals(status) && !"COMPLETED".equals(session.getStatus())) {
                 session.setEndTime(Instant.now());
-                pageVisitService.estimateDuration(id);
+                pageVisitService.estimateDuration(id, session.getEndTime());
             }
             session.setStatus(status);
         }
@@ -115,10 +115,12 @@ public class ResearchSessionService {
     }
 
     public List<PageVisit> getPages(String sessionId) {
+        getSession(sessionId);
         return pageVisitRepository.findBySessionIdOrderByFirstVisited(sessionId);
     }
 
     public List<SearchQuery> getSearches(String sessionId) {
+        getSession(sessionId);
         return searchQueryRepository.findBySessionIdOrderByTimestamp(sessionId);
     }
 

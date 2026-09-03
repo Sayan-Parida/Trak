@@ -35,22 +35,22 @@ public class SearchDetector {
             String engine = null;
             String param = null;
 
-            if (host.contains("google.com") && uri.getPath().startsWith("/search")) {
+            if (isHostOrSubdomain(host, "google.com") && uri.getPath().startsWith("/search")) {
                 engine = "Google";
                 param = "q";
-            } else if (host.contains("bing.com") && uri.getPath().startsWith("/search")) {
+            } else if (isHostOrSubdomain(host, "bing.com") && uri.getPath().startsWith("/search")) {
                 engine = "Bing";
                 param = "q";
-            } else if (host.contains("duckduckgo.com")) {
+            } else if (isHostOrSubdomain(host, "duckduckgo.com")) {
                 engine = "DuckDuckGo";
                 param = "q";
-            } else if (host.contains("youtube.com") && uri.getPath().startsWith("/results")) {
+            } else if (isHostOrSubdomain(host, "youtube.com") && uri.getPath().startsWith("/results")) {
                 engine = "YouTube";
                 param = "search_query";
-            } else if (host.contains("github.com") && uri.getPath().startsWith("/search")) {
+            } else if (isHostOrSubdomain(host, "github.com") && uri.getPath().startsWith("/search")) {
                 engine = "GitHub";
                 param = "q";
-            } else if (host.contains("stackoverflow.com") && uri.getPath().startsWith("/search")) {
+            } else if (isHostOrSubdomain(host, "stackoverflow.com") && uri.getPath().startsWith("/search")) {
                 engine = "StackOverflow";
                 param = "q";
             }
@@ -70,5 +70,9 @@ public class SearchDetector {
             // Invalid URL or URI syntax exception, ignore and return empty
         }
         return Optional.empty();
+    }
+
+    private boolean isHostOrSubdomain(String host, String registeredDomain) {
+        return host.equals(registeredDomain) || host.endsWith("." + registeredDomain);
     }
 }

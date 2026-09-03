@@ -68,4 +68,16 @@ class SearchDetectorTest {
         Optional<SearchDetector.SearchResult> result = detector.detect("not-a-url");
         assertFalse(result.isPresent());
     }
+
+    @Test
+    void doesNotDetectLookalikeGoogleDomain() {
+        Optional<SearchDetector.SearchResult> result = detector.detect("https://notgoogle.com/search?q=test");
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    void doesNotDetectLookalikeBingDomain() {
+        Optional<SearchDetector.SearchResult> result = detector.detect("https://notbing.com/search?q=test");
+        assertFalse(result.isPresent());
+    }
 }
