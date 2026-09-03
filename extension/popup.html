@@ -2,95 +2,171 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Trak</title>
+  <title>ResearchMind</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      width: 320px;
-      margin: 0;
-      padding: 16px;
-      color: #333;
+    :root {
+      --bg: #f8f9fa;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --status-active: #059669;
+      --status-danger: #dc2626;
+      --status-danger-hover: #b91c1c;
     }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #101216;
+        --surface: #16181d;
+        --border: #262a33;
+        --text: #f3f4f6;
+        --text-muted: #9ca3af;
+        --accent: #3b82f6;
+        --accent-hover: #60a5fa;
+        --status-active: #10b981;
+        --status-danger: #ef4444;
+        --status-danger-hover: #dc2626;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      width: 280px;
+      margin: 0;
+      padding: 12px;
+      background-color: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.4;
+      user-select: none;
+    }
+
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      border-bottom: 1px solid #eee;
+      margin-bottom: 12px;
       padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
     }
-    h1 {
-      font-size: 18px;
-      margin: 0;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
     }
+
+    .brand-mark {
+      width: 14px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 3px;
+    }
+
     .status-container {
       display: flex;
       align-items: center;
-      font-size: 12px;
+      font-size: 10px;
+      font-family: monospace;
+      color: var(--text-muted);
     }
+
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      margin-right: 6px;
+      margin-right: 4px;
     }
-    .connected { background-color: #4caf50; }
-    .disconnected { background-color: #f44336; }
-    
+
+    .connected { background-color: var(--status-active); }
+    .disconnected { background-color: var(--text-muted); }
+
     .section {
-      margin-bottom: 16px;
+      margin-bottom: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
     }
-    
+
     #session-info {
-      font-weight: bold;
+      font-size: 11px;
+      font-weight: 600;
       margin-bottom: 8px;
+      color: var(--text);
     }
-    
+
     #queue-info {
-      font-size: 12px;
-      color: #ff9800;
+      font-size: 10px;
+      font-family: monospace;
+      color: var(--text-muted);
       margin-bottom: 8px;
       display: none;
     }
 
     input[type="text"] {
       width: 100%;
-      padding: 8px;
+      padding: 6px 8px;
       margin-bottom: 8px;
-      border: 1px solid #ccc;
+      background: var(--bg);
+      border: 1px solid var(--border);
       border-radius: 4px;
-      box-sizing: border-box;
+      color: var(--text);
+      font-size: 11px;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
     }
 
     button {
       width: 100%;
-      padding: 8px;
+      padding: 6px 10px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      font-weight: bold;
-      margin-bottom: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      transition: background 0.15s ease;
     }
-    
+
     .primary-btn {
-      background-color: #2196f3;
-      color: white;
+      background-color: var(--accent);
+      color: #ffffff;
     }
-    
+    .primary-btn:hover { background-color: var(--accent-hover); }
+
     .danger-btn {
-      background-color: #f44336;
-      color: white;
+      background-color: var(--status-danger);
+      color: #ffffff;
     }
-    
+    .danger-btn:hover { background-color: var(--status-danger-hover); }
+
     .secondary-btn {
-      background-color: #e0e0e0;
-      color: #333;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .secondary-btn:hover {
+      background-color: var(--bg);
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>Trak</h1>
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <span>ResearchMind</span>
+    </div>
     <div class="status-container">
       <div id="status-indicator" class="status-dot disconnected"></div>
       <span id="status-text">Checking...</span>
@@ -100,20 +176,18 @@
   <div class="section">
     <div id="session-info">Loading...</div>
     <div id="queue-info"></div>
-    
+
     <div id="start-session-div" style="display: none;">
-      <input type="text" id="session-title" placeholder="Session Title (optional)">
+      <input type="text" id="session-title" placeholder="Workspace Topic...">
       <button id="start-btn" class="primary-btn">Start Session</button>
     </div>
-    
+
     <div id="end-session-div" style="display: none;">
       <button id="end-btn" class="danger-btn">End Session</button>
     </div>
   </div>
 
-  <div class="section">
-    <button id="dashboard-btn" class="secondary-btn">Open Dashboard</button>
-  </div>
+  <button id="dashboard-btn" class="secondary-btn">Open Workspace</button>
 
   <script src="popup.js"></script>
 </body>

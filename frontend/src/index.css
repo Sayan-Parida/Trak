@@ -1,1 +1,304 @@
 @import "tailwindcss";
+
+/* -------------------------------------------------------------
+   RESEARCHMIND DESIGN SYSTEM
+   Principles: Calm, Restrained, Precise, Desktop-First
+   ------------------------------------------------------------- */
+
+:root {
+  /* Typography Scale */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* LIGHT THEME (Warm/Neutral White, Soft Gray Borders, Deep Calm Text) */
+  --bg-app: #f8f9fa;
+  --surface-base: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-subtle: #f3f4f6;
+  --surface-hover: #f1f3f5;
+  --surface-selected: #e9ecef;
+  --surface-overlay: rgba(255, 255, 255, 0.96);
+
+  --border-subtle: #e5e7eb;
+  --border-medium: #d1d5db;
+  --border-strong: #9ca3af;
+  --border-focus: #2563eb;
+
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --text-faint: #9ca3af;
+
+  /* Restrained Accents */
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-subtle: #eff6ff;
+
+  --status-active: #059669;
+  --status-active-subtle: #ecfdf5;
+  --status-muted: #6b7280;
+  --status-warning: #d97706;
+  --status-danger: #dc2626;
+
+  /* Graph Canvas */
+  --graph-bg: #f8f9fa;
+  --graph-dot: #e5e7eb;
+  --graph-edge: #d1d5db;
+  --graph-edge-highlight: #4b5563;
+
+  /* Node Accents (Subtle, Muted) */
+  --node-paper: #0d9488;
+  --node-paper-bg: #f0fdfa;
+  --node-page: #4f46e5;
+  --node-page-bg: #eef2ff;
+  --node-concept: #7c3aed;
+  --node-concept-bg: #f5f3ff;
+  --node-search: #d97706;
+  --node-search-bg: #fffbeb;
+  --node-insight: #059669;
+  --node-insight-bg: #ecfdf5;
+
+  /* Shadows (Restrained, crisp) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--border-subtle);
+  --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--border-subtle);
+
+  /* Radius Scale */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+/* DARK THEME (Deep Charcoal, Soft Off-White Text, Subtle Borders) */
+:root[data-theme="dark"] {
+  --bg-app: #101216;
+  --surface-base: #16181d;
+  --surface-elevated: #1c1f26;
+  --surface-subtle: #1a1d23;
+  --surface-hover: #222630;
+  --surface-selected: #282d38;
+  --surface-overlay: rgba(22, 24, 29, 0.96);
+
+  --border-subtle: #262a33;
+  --border-medium: #343a46;
+  --border-strong: #4b5563;
+  --border-focus: #3b82f6;
+
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-faint: #4b5563;
+
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-subtle: #1e293b;
+
+  --status-active: #10b981;
+  --status-active-subtle: #064e3b;
+  --status-muted: #6b7280;
+  --status-warning: #f59e0b;
+  --status-danger: #ef4444;
+
+  --graph-bg: #101216;
+  --graph-dot: #1f232b;
+  --graph-edge: #2d333f;
+  --graph-edge-highlight: #9ca3af;
+
+  --node-paper: #2dd4bf;
+  --node-paper-bg: #132e2b;
+  --node-page: #818cf8;
+  --node-page-bg: #1e1b4b;
+  --node-concept: #a78bfa;
+  --node-concept-bg: #2e1065;
+  --node-search: #fbbf24;
+  --node-search-bg: #451a03;
+  --node-insight: #34d399;
+  --node-insight-bg: #064e3b;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-subtle);
+  --shadow-panel: 0 8px 28px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-medium);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --bg-app: #101216;
+    --surface-base: #16181d;
+    --surface-elevated: #1c1f26;
+    --surface-subtle: #1a1d23;
+    --surface-hover: #222630;
+    --surface-selected: #282d38;
+    --surface-overlay: rgba(22, 24, 29, 0.96);
+
+    --border-subtle: #262a33;
+    --border-medium: #343a46;
+    --border-strong: #4b5563;
+    --border-focus: #3b82f6;
+
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --text-faint: #4b5563;
+
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+    --accent-subtle: #1e293b;
+
+    --status-active: #10b981;
+    --status-active-subtle: #064e3b;
+    --status-muted: #6b7280;
+    --status-warning: #f59e0b;
+    --status-danger: #ef4444;
+
+    --graph-bg: #101216;
+    --graph-dot: #1f232b;
+    --graph-edge: #2d333f;
+    --graph-edge-highlight: #9ca3af;
+
+    --node-paper: #2dd4bf;
+    --node-paper-bg: #132e2b;
+    --node-page: #818cf8;
+    --node-page-bg: #1e1b4b;
+    --node-concept: #a78bfa;
+    --node-concept-bg: #2e1065;
+    --node-search: #fbbf24;
+    --node-search-bg: #451a03;
+    --node-insight: #34d399;
+    --node-insight-bg: #064e3b;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-subtle);
+    --shadow-panel: 0 8px 28px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-medium);
+  }
+}
+
+/* Global Reset & Base Setup */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Focus States */
+:focus-visible {
+  outline: 1.5px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+/* -------------------------------------------------------------
+   REACT FLOW & GRAPH CANVAS
+   ------------------------------------------------------------- */
+
+.react-flow__background {
+  background-color: var(--graph-bg) !important;
+}
+
+.react-flow__background-pattern line {
+  stroke: var(--graph-dot) !important;
+}
+
+.react-flow__controls {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--surface-base) !important;
+  box-shadow: var(--shadow-sm) !important;
+  overflow: hidden !important;
+}
+
+.react-flow__controls-button {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  color: var(--text-secondary) !important;
+  fill: var(--text-secondary) !important;
+  width: 26px !important;
+  height: 26px !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--surface-hover) !important;
+  color: var(--text-primary) !important;
+  fill: var(--text-primary) !important;
+}
+
+.react-flow__minimap {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--surface-base) !important;
+  box-shadow: var(--shadow-md) !important;
+  overflow: hidden !important;
+}
+
+/* Smooth Edge Strokes */
+.react-flow__edge-path {
+  stroke: var(--graph-edge) !important;
+  stroke-width: 1.25px !important;
+  transition: stroke 0.15s ease, stroke-width 0.15s ease !important;
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: var(--graph-edge-highlight) !important;
+  stroke-width: 1.75px !important;
+}
+
+.react-flow__edge-textbg {
+  fill: var(--surface-base) !important;
+  rx: 3px !important;
+  ry: 3px !important;
+  stroke: var(--border-subtle) !important;
+  stroke-width: 1px !important;
+}
+
+.react-flow__edge-text {
+  fill: var(--text-muted) !important;
+  font-size: 9px !important;
+  font-weight: 500 !important;
+  font-family: var(--font-mono) !important;
+  letter-spacing: 0.02em !important;
+}
