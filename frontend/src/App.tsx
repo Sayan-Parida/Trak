@@ -5,6 +5,7 @@ import MindMap from './components/MindMap';
 import { PageVisit } from './types';
 import { apiClient } from './api/client';
 import { useEffect } from 'react';
+import ResearchSearch from './components/ResearchSearch';
 
 function PagesView({ sessionId }: { sessionId: string }) {
   const [pages, setPages] = useState<PageVisit[]>([]);
@@ -53,6 +54,7 @@ export default function App() {
       />
       
       <main className="flex-1 flex flex-col min-w-0">
+        <ResearchSearch onOpenSession={setSelectedSessionId} />
         {!selectedSessionId ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center p-8 max-w-md">

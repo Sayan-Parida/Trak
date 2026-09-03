@@ -83,3 +83,32 @@ export interface ResearchGraphData {
   nodes: ResearchGraphNode[];
   edges: ResearchGraphEdge[];
 }
+
+export interface ResearchSearchResult {
+  id: string;
+  type: string;
+  label: string;
+  sessionId: string;
+  timestamp: string;
+  url: string | null;
+  domain: string | null;
+  visitCount: number;
+  score: number;
+  importanceScore: number;
+  matchedTerms: string[];
+  reasons: string[];
+  metadata: Record<string, unknown>;
+  graphContext: Array<{
+    source: string;
+    target: string;
+    relationshipType: string;
+    reason: string;
+  }>;
+}
+
+export interface ResearchSearchData {
+  query: string;
+  normalizedQuery: string;
+  totalResults: number;
+  results: ResearchSearchResult[];
+}

@@ -10,4 +10,5 @@ import java.util.List;
 public interface ResearchSessionRepository extends JpaRepository<ResearchSession, String> {
     List<ResearchSession> findByStatusOrderByStartTimeDesc(String status);
     List<ResearchSession> findByOrderByStartTimeDesc();
+    List<ResearchSession> findByTitleContainingIgnoreCase(String term);
 }

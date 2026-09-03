@@ -7,7 +7,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "search_query", indexes = {
         @Index(name = "idx_search_query_session_id", columnList = "session_id"),
-        @Index(name = "idx_search_query_timestamp", columnList = "timestamp")
+    @Index(name = "idx_search_query_timestamp", columnList = "timestamp"),
+    @Index(name = "idx_search_query_normalized_query", columnList = "normalized_query")
 })
 public class SearchQuery {
 
@@ -16,6 +17,9 @@ public class SearchQuery {
 
     @Column(name = "query_text", length = 1024, nullable = false)
     private String queryText;
+
+    @Column(name = "normalized_query", length = 1024)
+    private String normalizedQuery;
 
     @Column(length = 50, nullable = false)
     private String engine;
@@ -49,6 +53,9 @@ public class SearchQuery {
     
     public String getQueryText() { return queryText; }
     public void setQueryText(String queryText) { this.queryText = queryText; }
+
+    public String getNormalizedQuery() { return normalizedQuery; }
+    public void setNormalizedQuery(String normalizedQuery) { this.normalizedQuery = normalizedQuery; }
     
     public String getEngine() { return engine; }
     public void setEngine(String engine) { this.engine = engine; }

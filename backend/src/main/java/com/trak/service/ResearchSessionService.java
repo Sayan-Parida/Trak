@@ -26,17 +26,20 @@ public class ResearchSessionService {
     private final PageVisitRepository pageVisitRepository;
     private final SearchQueryRepository searchQueryRepository;
     private final PageVisitService pageVisitService;
+    private final ResearchSearchIndexService searchIndexService;
 
     public ResearchSessionService(ResearchSessionRepository sessionRepository,
                                   BrowserEventRepository eventRepository,
                                   PageVisitRepository pageVisitRepository,
                                   SearchQueryRepository searchQueryRepository,
-                                  PageVisitService pageVisitService) {
+                                  PageVisitService pageVisitService,
+                                  ResearchSearchIndexService searchIndexService) {
         this.sessionRepository = sessionRepository;
         this.eventRepository = eventRepository;
         this.pageVisitRepository = pageVisitRepository;
         this.searchQueryRepository = searchQueryRepository;
         this.pageVisitService = pageVisitService;
+        this.searchIndexService = searchIndexService;
     }
 
     @Transactional
@@ -45,7 +48,9 @@ public class ResearchSessionService {
         session.setTitle(title);
         session.setStatus("ACTIVE");
         session.setStartTime(Instant.now());
-        return sessionRepository.save(session);
+        ResearchSession saved = sessionRepository.save(session);
+        searchIndexService.indexSession(saved);
+        return saved;
     }
 
     public ResearchSession getSession(String id) {

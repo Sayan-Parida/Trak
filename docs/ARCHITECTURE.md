@@ -114,6 +114,14 @@ The relationship window is ten minutes. Search and navigation relationships requ
 
 The graph reconstructs observable investigation flow from local browser events. It does not infer topics, semantic similarity, intent, branches, or causal relationships beyond timestamp and tab evidence. Topic extraction, embeddings, and AI enrichment are not implemented.
 
+### Research Retrieval
+
+`GET /api/research/search?q=...` provides structured evidence across matching searches, pages, and session records. Optional bounded filters are `limit` (1..50), `session`, `type`, and `domain`. Original display values are retained alongside lowercase, whitespace-normalized indexed fields. A lightweight deterministic tokenizer removes common stopwords and one-character noise while preserving technical terms. Results are ranked with this explainable formula:
+
+`score = min(1, 0.55 * term overlap + 0.20 * importance + 0.15 * recency + 0.10 * graph connectivity + 0.20 * exact phrase bonus)`
+
+Page importance uses `0.40 * min(1, visit count / 5) + 0.20 * min(1, dwell milliseconds / 300000)`, with the remaining score components representing textual evidence, freshness relative to the candidate set, and graph links. Results include matched terms, reasons, session IDs, and graph relationships rather than generated summaries. Retrieval is deterministic and has no semantic AI, embeddings, or cloud services. FTS5 is used only as a rebuildable lexical candidate index; SQLite relational tables remain authoritative. New records replace their FTS rows during ingestion, while startup reconciliation rebuilds only when the index row count differs from the source record count. A local `POST /api/research/search-index/rebuild` operation is available for explicit recovery.
+
 ## Key Design Decisions
 
 ### Why HTTP REST, not WebSocket?

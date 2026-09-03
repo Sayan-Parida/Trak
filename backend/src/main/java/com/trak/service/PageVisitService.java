@@ -5,6 +5,7 @@ import com.trak.domain.model.EventType;
 import com.trak.domain.model.PageVisit;
 import com.trak.domain.repository.BrowserEventRepository;
 import com.trak.domain.repository.PageVisitRepository;
+import com.trak.processing.text.ResearchTextNormalizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +41,10 @@ public class PageVisitService {
             }
             if (title != null && !title.isBlank()) {
                 visit.setTitle(title);
+                visit.setNormalizedTitle(ResearchTextNormalizer.normalize(title));
+            }
+            if (visit.getNormalizedDomain() == null) {
+                visit.setNormalizedDomain(ResearchTextNormalizer.normalize(visit.getDomain()));
             }
             return pageVisitRepository.save(visit);
         } else {
@@ -50,6 +55,8 @@ public class PageVisitService {
             visit.setLastVisited(timestamp);
             visit.setTitle(title);
             visit.setDomain(extractDomain(url));
+            visit.setNormalizedTitle(ResearchTextNormalizer.normalize(title));
+            visit.setNormalizedDomain(ResearchTextNormalizer.normalize(visit.getDomain()));
             visit.setVisitCount(1);
             visit.setDurationMs(0);
             return pageVisitRepository.save(visit);

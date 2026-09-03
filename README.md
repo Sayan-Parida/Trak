@@ -36,6 +36,7 @@ Research often moves through multiple searches, tabs, and sources before reachin
 - Timeline
 - Pages view
 - Deterministic research graph and Research Map
+- Deterministic research retrieval at `/api/research/search?q=...`
 - Local SQLite persistence
 
 ### Planned

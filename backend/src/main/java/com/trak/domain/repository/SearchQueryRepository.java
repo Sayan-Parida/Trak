@@ -10,4 +10,7 @@ import java.util.List;
 public interface SearchQueryRepository extends JpaRepository<SearchQuery, String> {
     List<SearchQuery> findBySessionIdOrderByTimestamp(String sessionId);
     List<SearchQuery> findBySessionId(String sessionId);
+    List<SearchQuery> findByNormalizedQueryContainingIgnoreCase(String term);
+    List<SearchQuery> findByQueryTextContainingIgnoreCase(String term);
+    List<SearchQuery> findByNormalizedQueryIsNullOrNormalizedQuery(String value);
 }

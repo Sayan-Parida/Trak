@@ -61,6 +61,8 @@ Aggregated view of a URL within a session. Multiple navigations to the same URL 
 | `url` | VARCHAR(2048) | NOT NULL | Page URL |
 | `domain` | VARCHAR(500) | | Extracted domain (e.g., docs.oracle.com) |
 | `title` | VARCHAR(1024) | | Page title (latest) |
+| `normalized_title` | VARCHAR(1024) | | Lowercase, whitespace-normalized title used for retrieval |
+| `normalized_domain` | VARCHAR(500) | | Canonical lowercase hostname used for retrieval |
 | `first_visited` | TIMESTAMP | NOT NULL | First visit time in this session |
 | `last_visited` | TIMESTAMP | NOT NULL | Most recent visit time |
 | `visit_count` | INTEGER | NOT NULL, DEFAULT 1 | Number of times visited in session |
@@ -72,6 +74,8 @@ Aggregated view of a URL within a session. Multiple navigations to the same URL 
 - `idx_pagevisit_session` on `session_id`
 - `idx_pagevisit_domain` on `domain`
 - `idx_pagevisit_url_session` on `(url, session_id)` — uniqueness within session
+- `idx_page_visit_normalized_title` on `normalized_title`
+- `idx_page_visit_normalized_domain` on `normalized_domain`
 
 ### `search_query`
 
@@ -81,6 +85,7 @@ Extracted search queries from navigation events to known search engines.
 |--------|------|-------------|-------------|
 | `id` | VARCHAR(36) | PK | UUID |
 | `query_text` | VARCHAR(1024) | NOT NULL | Extracted search terms |
+| `normalized_query` | VARCHAR(1024) | | Lowercase, whitespace-normalized query used for retrieval |
 | `engine` | VARCHAR(50) | NOT NULL | google, bing, duckduckgo, youtube, github, stackoverflow |
 | `source_url` | VARCHAR(2048) | NOT NULL | Full search URL |
 | `timestamp` | TIMESTAMP | NOT NULL | When the search was performed |
@@ -91,6 +96,7 @@ Extracted search queries from navigation events to known search engines.
 **Indexes:**
 - `idx_search_session` on `session_id`
 - `idx_search_timestamp` on `timestamp`
+- `idx_search_query_normalized_query` on `normalized_query`
 
 ## Entity Relationships
 
@@ -115,3 +121,9 @@ spring.jpa.properties.hibernate.connection.pragma.foreign_keys=ON
 ## Migration Strategy
 
 Schema is managed by Hibernate's `ddl-auto=update` during development. For production, Flyway or Liquibase migrations should be introduced.
+
+## Deterministic Retrieval
+
+Trak preserves original query, title, URL, and domain values while storing canonical query/title/hostname fields for indexed lookups. Retrieval tokenizes lowercase text, removes common stopwords and one-character noise, and keeps technical terms such as `jvm`, `kafka`, `postgres`, `spring`, and `kubernetes`. SQLite remains the source of truth. The `research_search_index` FTS5 table is a rebuildable lexical index over searches, pages, and sessions; it stores source identifiers and unindexed metadata so relational tables remain authoritative.
+
+New records replace their corresponding FTS row during ingestion. On startup, the index initializer fills only missing canonical fields, creates the virtual table, and compares its row count with the source tables; a mismatch triggers an idempotent rebuild. The explicit local maintenance operation `POST /api/research/search-index/rebuild` rebuilds the index from all authoritative records without changing or deleting them.

@@ -10,6 +10,7 @@ import com.trak.domain.repository.SearchQueryRepository;
 import com.trak.exception.DuplicateEventException;
 import com.trak.processing.SearchDetector;
 import com.trak.processing.SessionDetector;
+import com.trak.processing.text.ResearchTextNormalizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,17 +26,20 @@ public class EventIngestionService {
     private final PageVisitService pageVisitService;
     private final SearchDetector searchDetector;
     private final SessionDetector sessionDetector;
+    private final ResearchSearchIndexService searchIndexService;
 
     public EventIngestionService(BrowserEventRepository browserEventRepository,
                                  SearchQueryRepository searchQueryRepository,
                                  PageVisitService pageVisitService,
                                  SearchDetector searchDetector,
-                                 SessionDetector sessionDetector) {
+                                 SessionDetector sessionDetector,
+                                 ResearchSearchIndexService searchIndexService) {
         this.browserEventRepository = browserEventRepository;
         this.searchQueryRepository = searchQueryRepository;
         this.pageVisitService = pageVisitService;
         this.searchDetector = searchDetector;
         this.sessionDetector = sessionDetector;
+        this.searchIndexService = searchIndexService;
     }
 
     @Transactional
@@ -66,11 +70,13 @@ public class EventIngestionService {
             PageVisit visit = pageVisitService.createOrUpdatePageVisit(event.getUrl(), event.getTitle(), event.getSessionId(), timestamp);
             if (visit != null) {
                 event.setPageVisitId(visit.getId());
+                searchIndexService.indexPage(visit);
             }
 
             searchDetector.detect(event.getUrl()).ifPresent(result -> {
                 SearchQuery query = new SearchQuery();
                 query.setQueryText(result.queryText());
+                query.setNormalizedQuery(ResearchTextNormalizer.normalize(result.queryText()));
                 query.setEngine(result.engine());
                 query.setSourceUrl(event.getUrl());
                 query.setTimestamp(timestamp);
@@ -78,7 +84,7 @@ public class EventIngestionService {
                 if (visit != null) {
                     query.setPageVisitId(visit.getId());
                 }
-                searchQueryRepository.save(query);
+                searchIndexService.indexSearch(searchQueryRepository.save(query));
             });
         }
         

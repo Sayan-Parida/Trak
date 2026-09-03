@@ -8,7 +8,9 @@ import java.util.UUID;
 @Table(name = "page_visit", indexes = {
         @Index(name = "idx_page_visit_session_id", columnList = "session_id"),
         @Index(name = "idx_page_visit_domain", columnList = "domain"),
-        @Index(name = "idx_page_visit_url_session", columnList = "url, session_id")
+        @Index(name = "idx_page_visit_url_session", columnList = "url, session_id"),
+        @Index(name = "idx_page_visit_normalized_title", columnList = "normalized_title"),
+        @Index(name = "idx_page_visit_normalized_domain", columnList = "normalized_domain")
 })
 public class PageVisit {
 
@@ -23,6 +25,12 @@ public class PageVisit {
 
     @Column(length = 1024)
     private String title;
+
+    @Column(name = "normalized_title", length = 1024)
+    private String normalizedTitle;
+
+    @Column(name = "normalized_domain", length = 500)
+    private String normalizedDomain;
 
     @Column(name = "first_visited", nullable = false)
     private Instant firstVisited;
@@ -62,6 +70,12 @@ public class PageVisit {
     
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    public String getNormalizedTitle() { return normalizedTitle; }
+    public void setNormalizedTitle(String normalizedTitle) { this.normalizedTitle = normalizedTitle; }
+
+    public String getNormalizedDomain() { return normalizedDomain; }
+    public void setNormalizedDomain(String normalizedDomain) { this.normalizedDomain = normalizedDomain; }
     
     public Instant getFirstVisited() { return firstVisited; }
     public void setFirstVisited(Instant firstVisited) { this.firstVisited = firstVisited; }
