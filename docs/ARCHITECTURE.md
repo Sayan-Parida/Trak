@@ -69,7 +69,7 @@ Trak is a local-first application that captures browser research activity and vi
 │  ┌───────────────────────────────────────────────┐  │
 │  │  SessionList ── Session overview & selection   │  │
 │  │  Timeline ── Chronological event view          │  │
-│  │  MindMap ── Interactive 2D graph (React Flow)  │  │
+│  │  ResearchMap ── Interactive 2D graph (React Flow)│ │
 │  │  NodeDetail ── Click-to-inspect metadata       │  │
 │  └───────────────┬───────────────────────────────┘  │
 │                  │ REST API calls                    │
@@ -99,18 +99,20 @@ Trak is a local-first application that captures browser research activity and vi
 4. Subsequent browser events include the `sessionId`
 5. User clicks "End Session" → `PUT /api/sessions/{id}` with status `COMPLETED`
 
-### Mind Map Generation Flow
+### Research Graph Generation Flow
 
-1. Frontend requests `GET /api/sessions/{id}/mindmap`
-2. Backend retrieves all `PageVisit` and `SearchQuery` records for the session
-3. Backend retrieves raw `BrowserEvent` records for relationship detection
-4. Relationships are derived from:
-   - Temporal ordering (event timestamps)
-   - Tab lineage (opener tab → opened tab)
-   - Search → result (navigation after search)
-   - Referrer chain (transition types)
-5. Response contains nodes (pages, searches) and edges (relationships)
-6. React Flow renders the graph with interactive zoom/pan/click
+1. Frontend requests `GET /api/sessions/{id}/research-graph`
+2. Backend retrieves session-scoped `PageVisit`, `SearchQuery`, and `BrowserEvent` records
+3. `ResearchGraphBuilder` filters records to the session start/end window and canonicalizes duplicate inputs
+4. The deterministic graph contains `SESSION`, `SEARCH`, `PAGE`, and `DOMAIN` nodes
+5. Explainable edges represent `SESSION_TO_SEARCH`, `SESSION_TO_PAGE`, `SEARCH_TO_PAGE`, `SEARCH_TO_SEARCH`, `PAGE_TO_SEARCH`, `PAGE_TO_PAGE`, and `PAGE_TO_DOMAIN` relationships
+6. React Flow renders the graph with interactive zoom/pan/click; no semantic topic extraction is performed
+
+The relationship window is ten minutes. Search and navigation relationships require same-tab evidence, and every edge includes a relationship type, reason, confidence, and relevant timestamps/tab metadata. Separate sessions are never connected. The legacy `GET /api/sessions/{id}/mindmap` endpoint remains available for compatibility.
+
+### Current Research Graph Limitations
+
+The graph reconstructs observable investigation flow from local browser events. It does not infer topics, semantic similarity, intent, branches, or causal relationships beyond timestamp and tab evidence. Topic extraction, embeddings, and AI enrichment are not implemented.
 
 ## Key Design Decisions
 

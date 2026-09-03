@@ -105,7 +105,7 @@ export default function MindMap({ sessionId }: Props) {
           source: e.source,
           target: e.target,
           label: e.relationshipType,
-          animated: e.relationshipType === 'SEARCH_RESULT',
+          animated: e.relationshipType === 'SEARCH_TO_PAGE',
           style: { stroke: '#64748b' }
         }));
 

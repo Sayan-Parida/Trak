@@ -1,6 +1,6 @@
 # Trak
 
-Trak is a local-first research activity tracker. Its Chrome extension captures browser activity during manually started research sessions, a Spring Boot API stores and processes the events, and a React dashboard presents the resulting timeline, visited pages, searches, and interactive mind map.
+Trak is a local-first research activity tracker. Its Chrome extension captures browser activity during manually started research sessions, a Spring Boot API stores and processes the events, and a React dashboard presents the resulting timeline, visited pages, searches, and interactive Research Map.
 
 The application is named `Trak`.
 
@@ -20,7 +20,7 @@ Research often moves through multiple searches, tabs, and sources before reachin
 - Aggregate repeated visits to the same URL within a session.
 - Estimate time spent on pages from browser activity.
 - Explore each session through:
-	- an interactive search-to-page mind map;
+	- an interactive deterministic Research Map;
 	- a chronological timeline;
 	- an aggregated pages view with domains, visit counts, and estimated time.
 - Store data in a single SQLite database with WAL mode and foreign-key support.
@@ -35,7 +35,7 @@ Research often moves through multiple searches, tabs, and sources before reachin
 - Page aggregation
 - Timeline
 - Pages view
-- Current search-to-page mind map
+- Deterministic research graph and Research Map
 - Local SQLite persistence
 
 ### Planned

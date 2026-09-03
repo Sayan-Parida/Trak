@@ -24,7 +24,13 @@ class ResearchGraphBuilderTest {
                 List.of(page("search-page", 60, "Search"), page("result-page", 120, "Oracle")),
                 List.of(search("search-1", 60, "search-page", "java virtual threads")));
 
-        assertTrue(hasEdge(graph, "search:search-1", "page:result-page", "SEARCH_RESULT"));
+        ResearchGraphResponse.ResearchGraphEdge edge = graph.edges().stream()
+            .filter(candidate -> candidate.source().equals("search:search-1")
+                && candidate.target().equals("page:result-page")
+                && candidate.relationshipType().equals("SEARCH_TO_PAGE"))
+            .findFirst().orElseThrow();
+        assertEquals("Page opened after a search in the same tab", edge.reason());
+        assertEquals(0.9, edge.confidence());
     }
 
     @Test
@@ -35,10 +41,28 @@ class ResearchGraphBuilderTest {
                 List.of(page("s1-page", 60, "Search"), page("p1", 120, "One"), page("p2", 180, "Two"), page("s2-page", 240, "Search 2")),
                 List.of(search("s1", 60, "s1-page", "kafka"), search("s2", 240, "s2-page", "kafka performance")));
 
-        assertTrue(hasEdge(graph, "search:s1", "page:p1", "SEARCH_RESULT"));
-        assertTrue(hasEdge(graph, "search:s1", "page:p2", "SEARCH_RESULT"));
-        assertTrue(hasEdge(graph, "search:s1", "search:s2", "SUBSEQUENT_SEARCH"));
-        assertTrue(hasEdge(graph, "page:p1", "page:p2", "SAME_TAB_NAVIGATION"));
+        assertTrue(hasEdge(graph, "search:s1", "page:p1", "SEARCH_TO_PAGE"));
+        assertTrue(hasEdge(graph, "search:s1", "page:p2", "SEARCH_TO_PAGE"));
+        assertTrue(hasEdge(graph, "search:s1", "search:s2", "SEARCH_TO_SEARCH"));
+        assertTrue(hasEdge(graph, "page:p1", "page:p2", "PAGE_TO_PAGE"));
+        assertTrue(hasEdge(graph, "page:p2", "search:s2", "PAGE_TO_SEARCH"));
+    }
+
+    @Test
+    void supportsTwoResearchBranchesWithoutCrossTabEdges() {
+        ResearchGraphResponse graph = build(List.of(
+                        event("kafka-search", 60, 1, "kafka-search", EventType.NAVIGATION),
+                        event("performance", 120, 1, "performance", EventType.NAVIGATION),
+                        event("architecture-search", 60, 2, "architecture-search", EventType.NAVIGATION),
+                        event("consumers", 120, 2, "consumers", EventType.NAVIGATION)),
+                List.of(page("kafka-search", 60, "Kafka"), page("performance", 120, "Performance benchmarks"),
+                        page("architecture-search", 60, "Kafka architecture"), page("consumers", 120, "Consumer groups")),
+                List.of(search("performance-search", 60, "kafka-search", "Kafka performance"),
+                        search("architecture-search", 60, "architecture-search", "Kafka architecture")));
+
+        assertTrue(hasEdge(graph, "search:performance-search", "page:performance", "SEARCH_TO_PAGE"));
+        assertTrue(hasEdge(graph, "search:architecture-search", "page:consumers", "SEARCH_TO_PAGE"));
+        assertFalse(hasEdge(graph, "search:performance-search", "page:consumers", "SEARCH_TO_PAGE"));
     }
 
     @Test
@@ -67,7 +91,45 @@ class ResearchGraphBuilderTest {
         ResearchGraphResponse first = build(events, pages, searches);
         ResearchGraphResponse second = build(events, pages, searches);
         assertEquals(first, second);
-        assertEquals(1, first.edges().stream().filter(edge -> edge.relationshipType().equals("SEARCH_RESULT")).count());
+        assertEquals(1, first.edges().stream().filter(edge -> edge.relationshipType().equals("SEARCH_TO_PAGE")).count());
+        assertEquals(1, first.nodes().stream().filter(node -> node.id().equals("page:result")).count());
+    }
+
+    @Test
+    void repeatedPageVisitRemainsOneNodeWithVisitCount() {
+        PageVisit repeated = page("result", 120, "Result");
+        repeated.setVisitCount(3);
+        ResearchGraphResponse graph = build(List.of(event("result", 120, 1, "result", EventType.NAVIGATION)),
+                List.of(repeated, repeated), List.of());
+
+        assertEquals(1, graph.nodes().stream().filter(node -> node.id().equals("page:result")).count());
+        assertEquals(3, graph.nodes().stream().filter(node -> node.id().equals("page:result"))
+                .findFirst().orElseThrow().metadata().get("visits"));
+    }
+
+            @Test
+            void reusesOneDomainNodeForMultiplePages() {
+            ResearchGraphResponse graph = build(List.of(event("one", 60, 1, "one", EventType.NAVIGATION),
+                    event("two", 120, 1, "two", EventType.NAVIGATION)),
+                List.of(page("one", 60, "One"), page("two", 120, "Two")), List.of());
+
+            assertEquals(1, graph.nodes().stream().filter(node -> node.type().equals("DOMAIN")
+                && node.id().equals("domain:example.com")).count());
+            assertEquals(2, graph.edges().stream().filter(edge -> edge.relationshipType().equals("PAGE_TO_DOMAIN")).count());
+            }
+
+    @Test
+    void ignoresEventsOutsideSessionBoundaries() {
+        BrowserEvent before = event("before", 10, 1, "before", EventType.NAVIGATION);
+        BrowserEvent inside = event("inside", 60, 1, "inside", EventType.NAVIGATION);
+        BrowserEvent after = event("after", 120, 1, "after", EventType.NAVIGATION);
+        ResearchGraphResponse graph = builder.build(SESSION, start.plusSeconds(60), start.plusSeconds(60),
+                List.of(before, inside, after), List.of(page("before", 10, "Before"), page("inside", 60, "Inside"),
+                        page("after", 120, "After")), List.of());
+
+        assertTrue(graph.nodes().stream().anyMatch(node -> node.id().equals("page:inside")));
+        assertFalse(graph.nodes().stream().anyMatch(node -> node.id().equals("page:before")));
+        assertFalse(graph.nodes().stream().anyMatch(node -> node.id().equals("page:after")));
     }
 
     @Test

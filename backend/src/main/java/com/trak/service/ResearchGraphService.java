@@ -4,7 +4,6 @@ import com.trak.api.dto.ResearchGraphResponse;
 import com.trak.domain.repository.BrowserEventRepository;
 import com.trak.domain.repository.PageVisitRepository;
 import com.trak.domain.repository.SearchQueryRepository;
-import com.trak.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,10 +27,9 @@ public class ResearchGraphService {
 
     @Transactional(readOnly = true)
     public ResearchGraphResponse getGraph(String sessionId) {
-        if (!sessionService.getSession(sessionId).getId().equals(sessionId)) {
-            throw new ResourceNotFoundException("Session not found");
-        }
-        return graphBuilder.build(sessionId, eventRepository.findBySessionIdOrderByTimestamp(sessionId),
+        var session = sessionService.getSession(sessionId);
+        return graphBuilder.build(sessionId, session.getStartTime(), session.getEndTime(),
+                eventRepository.findBySessionIdOrderByTimestamp(sessionId),
                 pageVisitRepository.findBySessionIdOrderByFirstVisited(sessionId),
                 searchQueryRepository.findBySessionIdOrderByTimestamp(sessionId));
     }

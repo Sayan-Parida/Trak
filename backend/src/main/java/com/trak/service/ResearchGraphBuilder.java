@@ -16,16 +16,24 @@ public class ResearchGraphBuilder {
 
     public ResearchGraphResponse build(String sessionId, List<BrowserEvent> events,
                                        List<PageVisit> pages, List<SearchQuery> searches) {
-        List<BrowserEvent> orderedEvents = events.stream()
+        return build(sessionId, null, null, events, pages, searches);
+    }
+
+    public ResearchGraphResponse build(String sessionId, Instant sessionStart, Instant sessionEnd,
+                           List<BrowserEvent> events, List<PageVisit> pages, List<SearchQuery> searches) {
+        List<BrowserEvent> orderedEvents = deduplicateEvents(events).stream()
                 .filter(event -> sessionId.equals(event.getSessionId()))
+                .filter(event -> isWithinSession(event.getTimestamp(), sessionStart, sessionEnd))
                 .sorted(Comparator.comparing(BrowserEvent::getTimestamp).thenComparing(event -> event.getId() == null ? 0 : event.getId()))
                 .toList();
-        List<PageVisit> orderedPages = pages.stream()
+        List<PageVisit> orderedPages = deduplicatePages(pages).stream()
                 .filter(page -> sessionId.equals(page.getSessionId()))
+                .filter(page -> isWithinSession(page.getFirstVisited(), sessionStart, sessionEnd))
                 .sorted(Comparator.comparing(PageVisit::getFirstVisited).thenComparing(PageVisit::getId))
                 .toList();
-        List<SearchQuery> orderedSearches = searches.stream()
+        List<SearchQuery> orderedSearches = deduplicateSearches(searches).stream()
                 .filter(search -> sessionId.equals(search.getSessionId()))
+                .filter(search -> isWithinSession(search.getTimestamp(), sessionStart, sessionEnd))
                 .sorted(Comparator.comparing(SearchQuery::getTimestamp).thenComparing(SearchQuery::getId))
                 .toList();
 
@@ -54,21 +62,25 @@ public class ResearchGraphBuilder {
         }
         Map<String, Integer> tabBySearch = new HashMap<>();
         for (SearchQuery search : orderedSearches) {
-            BrowserEvent sourceEvent = eventByPageVisit.get(search.getPageVisitId());
+            BrowserEvent sourceEvent = orderedEvents.stream()
+                    .filter(event -> Objects.equals(event.getPageVisitId(), search.getPageVisitId()))
+                    .filter(event -> search.getTimestamp().equals(event.getTimestamp()))
+                    .findFirst()
+                    .orElseGet(() -> eventByPageVisit.get(search.getPageVisitId()));
             if (sourceEvent != null) tabBySearch.put(search.getId(), sourceEvent.getTabId());
-            addEdge(edges, edgeKeys, "session:" + sessionId, "search:" + search.getId(), "CONTAINS", 1.0,
+            addEdge(edges, edgeKeys, "session:" + sessionId, "search:" + search.getId(), "SESSION_TO_SEARCH", 1.0,
                     "Search occurred within this research session", null, search.getTimestamp(), Map.of());
         }
         for (PageVisit page : orderedPages) {
             BrowserEvent firstEvent = eventByPageVisit.get(page.getId());
-            addEdge(edges, edgeKeys, "session:" + sessionId, "page:" + page.getId(), "CONTAINS", 1.0,
+            addEdge(edges, edgeKeys, "session:" + sessionId, "page:" + page.getId(), "SESSION_TO_PAGE", 1.0,
                     "Page was visited within this research session", null, page.getFirstVisited(), Map.of());
             if (firstEvent != null) {
                 for (SearchQuery search : orderedSearches) {
                     Integer searchTab = tabBySearch.get(search.getId());
                     if (searchTab != null && searchTab == firstEvent.getTabId()
                             && isAfterWithin(search.getTimestamp(), page.getFirstVisited())) {
-                        addEdge(edges, edgeKeys, "search:" + search.getId(), "page:" + page.getId(), "SEARCH_RESULT", 0.9,
+                        addEdge(edges, edgeKeys, "search:" + search.getId(), "page:" + page.getId(), "SEARCH_TO_PAGE", 0.9,
                                 "Page opened after a search in the same tab", search.getTimestamp(), page.getFirstVisited(),
                                 Map.of("tabId", firstEvent.getTabId()));
                     }
@@ -87,7 +99,7 @@ public class ResearchGraphBuilder {
         }
         for (PageVisit page : orderedPages) {
             if (page.getDomain() != null && domainNodeIds.containsKey(page.getDomain())) {
-                addEdge(edges, edgeKeys, "page:" + page.getId(), domainNodeIds.get(page.getDomain()), "BELONGS_TO_DOMAIN", 1.0,
+                addEdge(edges, edgeKeys, "page:" + page.getId(), domainNodeIds.get(page.getDomain()), "PAGE_TO_DOMAIN", 1.0,
                         "Page URL belongs to this domain", page.getFirstVisited(), page.getFirstVisited(), Map.of());
             }
         }
@@ -99,7 +111,7 @@ public class ResearchGraphBuilder {
                 SearchQuery next = orderedSearches.get(nextIndex);
                 if (next.getTimestamp().isAfter(current.getTimestamp().plus(RELATIONSHIP_WINDOW))) break;
                 if (currentTab.equals(tabBySearch.get(next.getId()))) {
-                    addEdge(edges, edgeKeys, "search:" + current.getId(), "search:" + next.getId(), "SUBSEQUENT_SEARCH", 0.8,
+                    addEdge(edges, edgeKeys, "search:" + current.getId(), "search:" + next.getId(), "SEARCH_TO_SEARCH", 0.8,
                             "Subsequent search in the same tab", current.getTimestamp(), next.getTimestamp(), Map.of("tabId", currentTab));
                     break;
                 }
@@ -123,15 +135,40 @@ public class ResearchGraphBuilder {
         }
         Map<Integer, BrowserEvent> previousByTab = new HashMap<>();
         for (BrowserEvent event : orderedEvents) {
-            if (event.getPageVisitId() == null || !pagesById.containsKey(event.getPageVisitId())) continue;
+            if (!"NAVIGATION".equals(event.getEventType().name()) || event.getPageVisitId() == null
+                || !pagesById.containsKey(event.getPageVisitId())) continue;
             BrowserEvent previous = previousByTab.put(event.getTabId(), event);
             if (previous != null && previous.getPageVisitId() != null && !previous.getPageVisitId().equals(event.getPageVisitId())
-                    && previous.getEventType().name().equals("NAVIGATION") && event.getEventType().name().equals("NAVIGATION")) {
-                addEdge(edges, edgeKeys, "page:" + previous.getPageVisitId(), "page:" + event.getPageVisitId(), "SAME_TAB_NAVIGATION", 0.85,
+                && previous.getEventType().name().equals("NAVIGATION")) {
+                addEdge(edges, edgeKeys, "page:" + previous.getPageVisitId(), "page:" + event.getPageVisitId(), "PAGE_TO_PAGE", 0.85,
                         "Consecutive navigation events in the same tab", previous.getTimestamp(), event.getTimestamp(), Map.of("tabId", event.getTabId()));
             }
         }
         return new ResearchGraphResponse(sessionId, nodes, edges);
+    }
+
+    private List<BrowserEvent> deduplicateEvents(List<BrowserEvent> events) {
+        return new ArrayList<>(events.stream().filter(event -> event.getSessionId() != null).collect(Collectors.toMap(this::eventKey, Function.identity(),
+                (first, ignored) -> first, LinkedHashMap::new)).values());
+    }
+
+    private List<PageVisit> deduplicatePages(List<PageVisit> pages) {
+        return new ArrayList<>(pages.stream().collect(Collectors.toMap(PageVisit::getId, Function.identity(),
+                (first, ignored) -> first, LinkedHashMap::new)).values());
+    }
+
+    private List<SearchQuery> deduplicateSearches(List<SearchQuery> searches) {
+        return new ArrayList<>(searches.stream().collect(Collectors.toMap(SearchQuery::getId, Function.identity(),
+                (first, ignored) -> first, LinkedHashMap::new)).values());
+    }
+
+    private String eventKey(BrowserEvent event) {
+        return event.getSessionId() + "|" + event.getTabId() + "|" + event.getUrl() + "|" + event.getTimestamp();
+    }
+
+    private boolean isWithinSession(Instant timestamp, Instant sessionStart, Instant sessionEnd) {
+        return timestamp != null && (sessionStart == null || !timestamp.isBefore(sessionStart))
+                && (sessionEnd == null || !timestamp.isAfter(sessionEnd));
     }
 
     private boolean isAfterWithin(Instant earlier, Instant later) {
