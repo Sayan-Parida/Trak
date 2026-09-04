@@ -1,9 +1,10 @@
-export type NodeType = 
-  | 'SEARCH' 
-  | 'PAGE' 
-  | 'SOURCE_PAPER' 
-  | 'CONCEPT' 
-  | 'DOMAIN' 
+export type NodeType =
+  | 'SESSION'
+  | 'SEARCH'
+  | 'PAGE'
+  | 'SOURCE_PAPER'
+  | 'CONCEPT'
+  | 'DOMAIN'
   | 'AI_INSIGHT';
 
 export type RelationshipType = 

@@ -279,20 +279,26 @@ function InnerMindMap({ sessionId }: Props) {
 
   if (loading && nodes.length === 0) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--text-muted)] text-xs font-mono">
+      <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--text-muted)] text-xs font-mono select-none">
         <Loader2 className="w-4 h-4 animate-spin text-[var(--text-secondary)]" />
-        <span>Loading research canvas...</span>
+        <span>Loading your research trail&hellip;</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center gap-2 text-xs">
-        <span className="text-[var(--status-danger)] font-medium">{error}</span>
+      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center gap-3 select-none">
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-xs text-[var(--text-secondary)] font-medium">Couldn&apos;t load this research map.</span>
+          <span className="text-[11px] text-[var(--text-muted)] font-mono max-w-xs leading-relaxed">
+            {error}
+          </span>
+        </div>
         <button
           onClick={loadGraph}
-          className="px-2.5 py-1 rounded text-xs bg-[var(--surface-selected)] hover:text-[var(--text-primary)]"
+          className="px-3 py-1.5 rounded text-xs font-semibold text-white transition-colors"
+          style={{ backgroundColor: 'var(--accent)' }}
         >
           Retry
         </button>
@@ -302,9 +308,10 @@ function InnerMindMap({ sessionId }: Props) {
 
   return (
     <div className="w-full h-full relative select-none">
-      {nodes.length === 0 ? (
-        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-xs text-[var(--text-muted)]">
-          No research entities in this workspace. Run a search query to populate.
+      {nodes.filter((n) => n.type !== 'SESSION').length === 0 ? (
+        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-xs text-[var(--text-muted)] select-none">
+          <span className="font-medium text-[var(--text-secondary)] mb-1">This session doesn&apos;t have enough research activity to build a map yet.</span>
+          <span className="text-[11px] font-mono leading-relaxed max-w-xs">Try running a deep research query or importing sources to populate the workspace.</span>
         </div>
       ) : (
         <ReactFlow
@@ -343,11 +350,13 @@ function InnerMindMap({ sessionId }: Props) {
               nodeStrokeWidth={1}
               nodeColor={(n) => {
                 switch (n.type) {
+                  case 'SESSION': return 'var(--node-concept)';
                   case 'SOURCE_PAPER': return 'var(--node-paper)';
                   case 'PAGE': return 'var(--node-page)';
                   case 'CONCEPT': return 'var(--node-concept)';
                   case 'SEARCH': return 'var(--node-search)';
                   case 'AI_INSIGHT': return 'var(--node-insight)';
+                  case 'DOMAIN': return 'var(--text-secondary)';
                   default: return 'var(--text-muted)';
                 }
               }}

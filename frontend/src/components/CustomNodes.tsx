@@ -1,12 +1,13 @@
 import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { 
-  BookOpen, 
-  Globe, 
-  Sparkles, 
-  Search, 
-  Cpu, 
-  Layers
+import {
+  BookOpen,
+  Globe,
+  Sparkles,
+  Search,
+  Cpu,
+  Layers,
+  Compass
 } from 'lucide-react';
 import { NodeType } from '../types';
 
@@ -267,6 +268,24 @@ export const DomainNode = memo(({ data, selected }: CustomNodeProps) => {
 DomainNode.displayName = 'DomainNode';
 
 export const nodeTypes = {
+  SESSION: memo(({ data, selected }: CustomNodeProps) => (
+    <NodeWrapper
+      selected={selected}
+      isDimmed={data.isDimmed}
+      isFocused={data.isFocused}
+      accentColor="var(--node-concept)"
+      accentBg="var(--node-concept-bg)"
+      typeLabel="Session"
+      icon={Compass}
+    >
+      <div className="text-xs font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-1">
+        {data.label}
+      </div>
+      <div className="text-[10px] font-mono text-[var(--text-muted)] pt-1 border-t border-[var(--border-subtle)]">
+        Root workspace
+      </div>
+    </NodeWrapper>
+  )),
   SOURCE_PAPER: PaperNode,
   PAGE: PageNode,
   CONCEPT: ConceptNode,

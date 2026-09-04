@@ -125,15 +125,30 @@ public class ResearchSessionService {
     }
 
     public MindMapResponse getMindMap(String sessionId) {
+        ResearchSession session = getSession(sessionId);
         List<PageVisit> pages = pageVisitRepository.findBySessionId(sessionId);
         List<SearchQuery> searches = searchQueryRepository.findBySessionId(sessionId);
 
         List<MindMapResponse.MindMapNode> nodes = new ArrayList<>();
         List<MindMapResponse.MindMapEdge> edges = new ArrayList<>();
 
+        // Session root node
+        nodes.add(new MindMapResponse.MindMapNode(
+                "session:" + sessionId,
+                "SESSION",
+                session.getTitle() == null || session.getTitle().isBlank() ? "Research Session" : session.getTitle(),
+                null,
+                null,
+                session.getStartTime(),
+                Map.of("status", session.getStatus() == null ? "ACTIVE" : session.getStatus())
+        ));
+
         for (SearchQuery sq : searches) {
             nodes.add(new MindMapResponse.MindMapNode(
                     sq.getId(), "SEARCH", sq.getQueryText(), sq.getSourceUrl(), sq.getEngine(), sq.getTimestamp(), Map.of()
+            ));
+            edges.add(new MindMapResponse.MindMapEdge(
+                    "session:" + sessionId, sq.getId(), "CONTAINS", "Search within this session"
             ));
         }
 
@@ -141,17 +156,45 @@ public class ResearchSessionService {
             nodes.add(new MindMapResponse.MindMapNode(
                     pv.getId(), "PAGE", pv.getTitle(), pv.getUrl(), pv.getDomain(), pv.getFirstVisited(), Map.of("visits", pv.getVisitCount())
             ));
+            edges.add(new MindMapResponse.MindMapEdge(
+                    "session:" + sessionId, pv.getId(), "CONTAINS", "Page visited in this session"
+            ));
         }
 
-        // Just simple edges from searches to pages if page was visited after search
+        // Simple edges from searches to pages if page was visited after search
         for (SearchQuery sq : searches) {
             for (PageVisit pv : pages) {
-                if (pv.getFirstVisited().isAfter(sq.getTimestamp()) && 
+                if (pv.getFirstVisited().isAfter(sq.getTimestamp()) &&
                     pv.getFirstVisited().isBefore(sq.getTimestamp().plusSeconds(600))) {
                     edges.add(new MindMapResponse.MindMapEdge(
                             sq.getId(), pv.getId(), "RESULTS_IN", "Visited after search"
                     ));
                 }
+            }
+        }
+
+        // Domain nodes (group pages by domain)
+        Map<String, List<PageVisit>> pagesByDomain = new LinkedHashMap<>();
+        for (PageVisit pv : pages) {
+            if (pv.getDomain() != null && !pv.getDomain().isBlank()) {
+                pagesByDomain.computeIfAbsent(pv.getDomain(), k -> new ArrayList<>()).add(pv);
+            }
+        }
+        for (Map.Entry<String, List<PageVisit>> entry : pagesByDomain.entrySet()) {
+            String domainId = "domain:" + entry.getKey();
+            nodes.add(new MindMapResponse.MindMapNode(
+                    domainId,
+                    "DOMAIN",
+                    entry.getKey(),
+                    null,
+                    entry.getKey(),
+                    null,
+                    Map.of("pageCount", entry.getValue().size())
+            ));
+            for (PageVisit pv : entry.getValue()) {
+                edges.add(new MindMapResponse.MindMapEdge(
+                        pv.getId(), domainId, "BELONGS_TO", "Page belongs to this domain"
+                ));
             }
         }
 

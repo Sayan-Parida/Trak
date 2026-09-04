@@ -44,6 +44,9 @@ public class SearchDetector {
             } else if (isHostOrSubdomain(host, "duckduckgo.com")) {
                 engine = "DuckDuckGo";
                 param = "q";
+            } else if (isHostOrSubdomain(host, "search.brave.com") || isHostOrSubdomain(host, "brave.com")) {
+                engine = "Brave";
+                param = "q";
             } else if (isHostOrSubdomain(host, "youtube.com") && uri.getPath().startsWith("/results")) {
                 engine = "YouTube";
                 param = "search_query";

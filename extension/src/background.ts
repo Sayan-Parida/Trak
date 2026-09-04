@@ -53,20 +53,19 @@ async function flushQueue() {
   
   if (queue.length === 0) return;
 
-  const successfulEvents: number[] = [];
-  
+  const failedEvents: number[] = [];
+
+  // Try each queued event independently; don't block the rest on one failure
   for (let i = 0; i < queue.length; i++) {
     const success = await api.sendEvent(queue[i].event);
-    if (success) {
-      successfulEvents.push(i);
-    } else {
-      break; // Stop flushing on first failure
+    if (!success) {
+      failedEvents.push(i);
     }
   }
 
-  if (successfulEvents.length > 0) {
-    // Remove successful events
-    queue = queue.filter((_, idx) => !successfulEvents.includes(idx));
+  if (failedEvents.length < queue.length) {
+    // Keep only failed events; remove all successful ones
+    queue = queue.filter((_, idx) => failedEvents.includes(idx));
     await chrome.storage.local.set({ eventQueue: queue });
   }
 }
