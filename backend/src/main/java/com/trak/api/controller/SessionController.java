@@ -6,6 +6,7 @@ import com.trak.domain.model.ResearchSession;
 import com.trak.domain.repository.BrowserEventRepository;
 import com.trak.domain.repository.PageVisitRepository;
 import com.trak.domain.repository.SearchQueryRepository;
+import com.trak.service.ResearchMemoryService;
 import com.trak.service.ResearchSessionService;
 import com.trak.service.ResearchGraphService;
 import jakarta.validation.Valid;
@@ -21,17 +22,20 @@ import java.util.stream.Collectors;
 public class SessionController {
 
     private final ResearchSessionService sessionService;
+    private final ResearchMemoryService researchMemoryService;
     private final BrowserEventRepository eventRepository;
     private final PageVisitRepository pageVisitRepository;
     private final SearchQueryRepository searchQueryRepository;
     private final ResearchGraphService researchGraphService;
 
     public SessionController(ResearchSessionService sessionService,
+                             ResearchMemoryService researchMemoryService,
                              BrowserEventRepository eventRepository,
                              PageVisitRepository pageVisitRepository,
                              SearchQueryRepository searchQueryRepository,
                              ResearchGraphService researchGraphService) {
         this.sessionService = sessionService;
+        this.researchMemoryService = researchMemoryService;
         this.eventRepository = eventRepository;
         this.pageVisitRepository = pageVisitRepository;
         this.searchQueryRepository = searchQueryRepository;
@@ -95,6 +99,11 @@ public class SessionController {
     @GetMapping("/{id}/research-graph")
     public ResponseEntity<ResearchGraphResponse> getResearchGraph(@PathVariable String id) {
         return ResponseEntity.ok(researchGraphService.getGraph(id));
+    }
+
+    @GetMapping("/{id}/research-memory")
+    public ResponseEntity<ResearchMemoryResponse> getResearchMemory(@PathVariable String id) {
+        return ResponseEntity.ok(researchMemoryService.getMemory(id));
     }
 
     private SessionResponse mapToResponse(ResearchSession session) {
