@@ -13,10 +13,11 @@ public interface PageVisitRepository extends JpaRepository<PageVisit, String> {
     Optional<PageVisit> findByUrlAndSessionId(String url, String sessionId);
     List<PageVisit> findBySessionId(String sessionId);
     List<PageVisit> findByNormalizedTitleContainingIgnoreCase(String term);
-    List<PageVisit> findByTitleContainingIgnoreCase(String term);
     List<PageVisit> findByNormalizedDomainContainingIgnoreCase(String term);
+    List<PageVisit> findByTitleContainingIgnoreCase(String term);
     List<PageVisit> findByDomainContainingIgnoreCase(String term);
     List<PageVisit> findByUrlContainingIgnoreCase(String term);
     List<PageVisit> findByNormalizedTitleIsNullOrNormalizedTitle(String value);
     List<PageVisit> findByNormalizedDomainIsNullOrNormalizedDomain(String value);
+    Optional<PageVisit> findBySessionIdAndNormalizedUrlAndNormalizedTitle(String sessionId, String normalizedUrl, String normalizedTitle);
 }

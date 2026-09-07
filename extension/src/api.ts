@@ -1,4 +1,4 @@
-import { BrowserEventRequest } from './types';
+import { BrowserEventRequest, ContentIngestPayload } from './types';
 
 const BASE_URL = 'http://localhost:8080';
 
@@ -85,6 +85,25 @@ export const api = {
       return res.ok;
     } catch {
       return false;
+    }
+  },
+
+  async ingestContent(payload: ContentIngestPayload): Promise<{ ok: boolean; body?: any }> {
+    try {
+      const res = await fetchWithTimeout(`${BASE_URL}/api/research/content/ingest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        timeout: 30000
+      } as any);
+      if (!res.ok) return { ok: false };
+      try {
+        return { ok: true, body: await res.json() };
+      } catch {
+        return { ok: true };
+      }
+    } catch {
+      return { ok: false };
     }
   }
 };

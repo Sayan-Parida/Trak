@@ -1,5 +1,5 @@
 import { api } from './api';
-import { BrowserEventRequest, SessionState, QueuedEvent, BackendStatus, EventType } from './types';
+import { BrowserEventRequest, SessionState, QueuedEvent, BackendStatus, EventType, ContentCaptureResult } from './types';
 
 // Constants
 const QUEUE_LIMIT = 1000;
@@ -214,5 +214,103 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: true });
     });
     return true;
+  } else if (message.type === 'CAPTURE_PAGE_CONTENT') {
+    capturePageContent().then((result) => {
+      sendResponse(result);
+    }).catch((e) => {
+      sendResponse({ success: false, message: e instanceof Error ? e.message : 'capture failed' } as ContentCaptureResult);
+    });
+    return true;
   }
 });
+
+// M5 content acquisition: privacy-gated, user-gesture driven.
+// The extension acquires redacted HTML; the backend performs canonical
+// extraction (PageContentExtractor). No second semantic extractor here.
+const PROHIBITED_CONTENT_PREFIXES = [
+  'chrome://', 'chrome-extension://', 'about:', 'data:', 'edge://', 'file://'
+];
+
+async function capturePageContent(): Promise<ContentCaptureResult> {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab || tab.id === undefined) {
+    return { success: false, message: 'No active tab' };
+  }
+  if (tab.incognito) {
+    return { success: false, message: 'Content capture is disabled in incognito' };
+  }
+  const url = tab.url || '';
+  for (const prefix of PROHIBITED_CONTENT_PREFIXES) {
+    if (url.startsWith(prefix)) {
+      return { success: false, message: 'Content capture is not available for this page' };
+    }
+  }
+
+  let captured: { url: string; canonicalUrl: string | null; title: string; html: string } | null = null;
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: capturePageHtmlInPage
+    });
+    captured = results?.[0]?.result ?? null;
+  } catch {
+    return { success: false, message: 'Could not read page content (permissions or page restrictions)' };
+  }
+  if (!captured || !captured.html) {
+    return { success: false, message: 'Page content is empty or unreadable' };
+  }
+
+  const data = await chrome.storage.local.get(['sessionState']);
+  const sessionState: SessionState | undefined = data.sessionState;
+
+  const result = await api.ingestContent({
+    sessionId: sessionState?.isActive ? sessionState.sessionId ?? undefined : undefined,
+    url: captured.url || url,
+    title: captured.title || tab.title,
+    html: captured.html,
+    captureMethod: 'MANUAL',
+    isIncognito: false
+  });
+  if (!result.ok) {
+    await updateBackendStatus(false);
+    return { success: false, message: 'Backend unavailable; content was not captured' };
+  }
+  await updateBackendStatus(true);
+  const body = result.body ?? {};
+  return {
+    success: true,
+    status: body.status,
+    chunkCount: body.chunkCount,
+    embeddedCount: body.embeddedCount,
+    message: body.message
+  };
+}
+
+// Runs INSIDE the page. Must stay self-contained (no closures).
+// Redacts sensitive values before anything leaves the page: passwords,
+// tokens, all input/textarea/select values. Backend strips the rest.
+function capturePageHtmlInPage(): { url: string; canonicalUrl: string | null; title: string; html: string } | null {
+  try {
+    const doc = document;
+    const clone = doc.documentElement.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('input[type="password"]').forEach((el) => el.remove());
+    clone.querySelectorAll('input, textarea, select').forEach((el) => {
+      const input = el as HTMLInputElement;
+      try {
+        input.value = '';
+        input.removeAttribute('value');
+      } catch { /* ignore */ }
+    });
+    clone.querySelectorAll('[name*="token" i], [name*="password" i], [name*="secret" i], ' +
+      '[autocomplete="current-password"], [autocomplete="new-password"], [autocomplete="cc-number"]').forEach((el) => el.remove());
+    clone.querySelectorAll('script, noscript, iframe, canvas, svg').forEach((el) => el.remove());
+    let html = clone.outerHTML || '';
+    const MAX_HTML_CHARS = 500000;
+    if (html.length > MAX_HTML_CHARS) html = html.substring(0, MAX_HTML_CHARS);
+    const canonicalEl = doc.querySelector('link[rel="canonical"]');
+    const canonicalUrl = canonicalEl ? (canonicalEl.getAttribute('href') || null) : null;
+    return { url: location.href, canonicalUrl, title: doc.title || '', html };
+  } catch {
+    return null;
+  }
+}

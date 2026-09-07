@@ -5,7 +5,9 @@ import {
   TimelineEntry, 
   MindMapData, 
   ResearchGraphData, 
-  ResearchSearchData 
+  ResearchSearchData,
+  PageContentStatus,
+  ResearchEvidenceItem
 } from '../types';
 import { researchStore } from './researchStore';
 
@@ -113,6 +115,30 @@ export const apiClient = {
       return await fetchJson<ResearchSearchData>(`/api/research/search?q=${encodeURIComponent(query)}`);
     } catch {
       return researchStore.searchAcrossResearch(query);
+    }
+  },
+
+  getPageContentStatus: async (pageVisitId: string): Promise<PageContentStatus | null> => {
+    try {
+      return await fetchJson<PageContentStatus>(`/api/research/content/status?pageVisitId=${encodeURIComponent(pageVisitId)}`);
+    } catch {
+      return null;
+    }
+  },
+
+  getSessionResearchContent: async (
+    sessionId: string,
+    query?: string,
+    domain?: string,
+    limit: number = 10
+  ): Promise<ResearchEvidenceItem[]> => {
+    try {
+      const params = new URLSearchParams({ limit: String(limit) });
+      if (query) params.set('query', query);
+      if (domain) params.set('domain', domain);
+      return await fetchJson<ResearchEvidenceItem[]>(`/api/research/content/sessions/${sessionId}/research-content?${params.toString()}`);
+    } catch {
+      return [];
     }
   },
 

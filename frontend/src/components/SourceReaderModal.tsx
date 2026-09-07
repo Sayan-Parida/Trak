@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   X, 
   ExternalLink, 
   Copy, 
   Check
 } from 'lucide-react';
-import { PageVisit } from '../types';
+import { PageVisit, PageContentStatus } from '../types';
+import { apiClient } from '../api/client';
 
 interface Props {
   page: PageVisit;
@@ -14,6 +15,17 @@ interface Props {
 
 export default function SourceReaderModal({ page, onClose }: Props) {
   const [copied, setCopied] = useState(false);
+  const [evidence, setEvidence] = useState<PageContentStatus | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiClient.getPageContentStatus(page.id).then((status) => {
+      if (!cancelled) setEvidence(status);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [page.id]);
 
   const handleCopyBibtex = () => {
     const bibtex = `@article{${page.id},
@@ -84,6 +96,18 @@ export default function SourceReaderModal({ page, onClose }: Props) {
             <span className="text-[10px] font-mono uppercase text-[var(--text-faint)] font-semibold">Abstract / Extract</span>
             <div className="p-3 rounded border bg-[var(--surface-subtle)] text-[11px] leading-relaxed text-[var(--text-secondary)]" style={{ borderColor: 'var(--border-subtle)' }}>
               {page.excerpt || 'Source content recorded in research repository.'}
+            </div>
+          </div>
+
+          {/* Research evidence (M5) */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-mono uppercase text-[var(--text-faint)] font-semibold">Research evidence</span>
+            <div className="p-3 rounded border bg-[var(--surface-subtle)] text-[11px] font-mono text-[var(--text-secondary)]" style={{ borderColor: 'var(--border-subtle)' }}>
+              {!evidence || evidence.status === 'NOT_EXTRACTED'
+                ? 'Content not captured for this page.'
+                : evidence.status === 'FAILED'
+                  ? 'Content unavailable for this page.'
+                  : `Content captured: ${evidence.chunkCount} chunks, ${evidence.embeddedCount} embedded.`}
             </div>
           </div>
         </div>

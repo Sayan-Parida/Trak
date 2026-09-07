@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const startBtn = document.getElementById('start-btn');
   const endBtn = document.getElementById('end-btn');
   const dashboardBtn = document.getElementById('dashboard-btn');
+  const captureBtn = document.getElementById('capture-btn');
+  const captureInfo = document.getElementById('capture-info');
 
   function updateUI() {
     chrome.runtime.sendMessage({ type: 'GET_STATE' }, (response) => {
@@ -68,6 +70,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   dashboardBtn?.addEventListener('click', () => {
     chrome.tabs.create({ url: 'http://localhost:5173' });
+  });
+
+  captureBtn?.addEventListener('click', () => {
+    captureInfo!.style.display = 'block';
+    captureInfo!.textContent = 'Capturing page content...';
+    chrome.runtime.sendMessage({ type: 'CAPTURE_PAGE_CONTENT' }, (response) => {
+      if (!response) {
+        captureInfo!.textContent = 'Capture failed: no response';
+        return;
+      }
+      if (response.success) {
+        const chunks = response.chunkCount ?? 0;
+        const embedded = response.embeddedCount ?? 0;
+        captureInfo!.textContent = `Captured: ${chunks} chunks, ${embedded} embedded (${response.status || 'ok'})`;
+      } else {
+        captureInfo!.textContent = `Not captured: ${response.message || 'unavailable'}`;
+      }
+    });
   });
 
   // Initial update

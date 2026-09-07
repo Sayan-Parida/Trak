@@ -57,8 +57,7 @@ export interface PageVisit {
 export interface SearchQuery {
   id: string;
   queryText: string;
-  engine: string;
-  sourceUrl?: string;
+  engine: string;  sourceUrl?: string;
   timestamp: string;
   intent?: 'exploratory' | 'factual' | 'comparative' | 'deep-synthesis';
   resultsFound?: number;
@@ -178,4 +177,45 @@ export interface ResearchSynthesisStep {
   title: string;
   description: string;
   status: 'pending' | 'running' | 'completed';
+}
+
+// M5 content / evidence layer (minimal, product-fitting)
+export type ContentCaptureStatus =
+  | 'NOT_EXTRACTED'
+  | 'EXTRACTING'
+  | 'EXTRACTED'
+  | 'FAILED';
+
+export interface PageContentStatus {
+  pageVisitId: string;
+  contentDocumentId: string | null;
+  contentVersionId: string | null;
+  status: string;
+  chunkCount: number;
+  embeddedCount: number;
+  lastExtractedAt: string | null;
+}
+
+export interface ResearchEvidenceProvenance {
+  contentDocumentId: string;
+  contentVersionId: string;
+  pageVisitId: string | null;
+  searchId: string | null;
+  sessionId: string | null;
+  domain: string | null;
+  canonicalUrl: string | null;
+  sourceUrl: string | null;
+  title: string | null;
+  pageVisitedAt: string | null;
+  extractedAt: string | null;
+  sourceTags: string[];
+}
+
+export interface ResearchEvidenceItem {
+  chunkId: string;
+  content: string;
+  similarityScore: number | null;
+  provenance: ResearchEvidenceProvenance;
+  extractionMethod: string | null;
+  extractedAt: string | null;
 }

@@ -27,3 +27,22 @@ export interface BackendStatus {
   connected: boolean;
   lastCheck: number;
 }
+
+export interface ContentIngestPayload {
+  pageVisitId?: string;
+  sessionId?: string;
+  url: string;
+  title?: string;
+  html?: string;
+  captureMethod?: string;
+  dwellTimeSeconds?: number;
+  isIncognito?: boolean;
+}
+
+export interface ContentCaptureResult {
+  success: boolean;
+  status?: string;
+  chunkCount?: number;
+  embeddedCount?: number;
+  message?: string;
+}

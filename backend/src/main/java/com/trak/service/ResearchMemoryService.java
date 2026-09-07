@@ -25,14 +25,59 @@ public class ResearchMemoryService {
     private final PageVisitRepository pageVisitRepository;
     private final SearchQueryRepository searchQueryRepository;
 
-    public ResearchMemoryService(ResearchSessionRepository sessionRepository,
-                                  BrowserEventRepository eventRepository,
-                                  PageVisitRepository pageVisitRepository,
-                                  SearchQueryRepository searchQueryRepository) {
+public ResearchMemoryService(ResearchSessionRepository sessionRepository,
+                                   BrowserEventRepository eventRepository,
+                                   PageVisitRepository pageVisitRepository,
+                                   SearchQueryRepository searchQueryRepository) {
         this.sessionRepository = sessionRepository;
         this.eventRepository = eventRepository;
         this.pageVisitRepository = pageVisitRepository;
         this.searchQueryRepository = searchQueryRepository;
+    }
+
+    @Transactional
+    public PageVisit createOrUpdatePageVisit(String url, String title, String sessionId, Instant timestamp) {
+        String domain = extractDomain(url);
+        String normalizedUrl = normalizeUrl(url);
+        String normalizedTitle = title != null ? title.trim().toLowerCase() : "";
+        String normalizedDomain = domain != null ? domain.toLowerCase() : "";
+
+        PageVisit existing = pageVisitRepository.findBySessionIdAndNormalizedUrlAndNormalizedTitle(sessionId, normalizedUrl, normalizedTitle);
+        if (existing != null) {
+            existing.setLastVisited(timestamp);
+            existing.setVisitCount(existing.getVisitCount() + 1);
+            existing.setDurationMs(timestamp.toEpochMilli() - existing.getFirstVisited().toEpochMilli());
+            return pageVisitRepository.save(existing);
+        }
+
+        PageVisit visit = new PageVisit();
+        visit.setUrl(url);
+        visit.setTitle(title);
+        visit.setDomain(domain);
+        visit.setNormalizedUrl(normalizedUrl);
+        visit.setNormalizedTitle(normalizedTitle);
+        visit.setNormalizedDomain(normalizedDomain);
+        visit.setFirstVisited(timestamp);
+        visit.setLastVisited(timestamp);
+        visit.setSessionId(sessionId);
+        return pageVisitRepository.save(visit);
+    }
+
+    private String extractDomain(String url) {
+        try {
+            return new java.net.URI(url).getHost();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String normalizeUrl(String url) {
+        try {
+            java.net.URI uri = new java.net.URI(url);
+            return uri.getScheme() + "://" + uri.getHost() + uri.getPath();
+        } catch (Exception e) {
+            return url;
+        }
     }
 
     @Transactional(readOnly = true)

@@ -5,7 +5,7 @@ import {
   List, 
   Loader2
 } from 'lucide-react';
-import { PageVisit } from '../types';
+import { PageVisit, PageContentStatus } from '../types';
 import { apiClient } from '../api/client';
 import { researchStore } from '../api/researchStore';
 import SourceReaderModal from './SourceReaderModal';
@@ -22,6 +22,7 @@ export default function PagesView({ sessionId }: Props) {
   const [selectedDomain, setSelectedDomain] = useState<string>('ALL');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [activeReaderPage, setActiveReaderPage] = useState<PageVisit | null>(null);
+  const [contentStatus, setContentStatus] = useState<Record<string, PageContentStatus>>({});
 
   const fetchPages = async () => {
     try {
@@ -29,6 +30,22 @@ export default function PagesView({ sessionId }: Props) {
       const data = await apiClient.getPages(sessionId);
       setPages(data);
       setError(null);
+      // M5: fetch per-page content capture status (tolerant; backend may be offline)
+      try {
+        const entries = await Promise.all(
+          data.map(async (p) => {
+            const status = await apiClient.getPageContentStatus(p.id);
+            return [p.id, status] as const;
+          })
+        );
+        const map: Record<string, PageContentStatus> = {};
+        for (const [id, status] of entries) {
+          if (status) map[id] = status;
+        }
+        setContentStatus(map);
+      } catch {
+        // content status is enrichment only; pages remain usable
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load sources');
     } finally {
@@ -55,6 +72,31 @@ export default function PagesView({ sessionId }: Props) {
     const matchesDomain = selectedDomain === 'ALL' || p.domain === selectedDomain;
     return matchesSearch && matchesDomain;
   });
+
+  const evidenceLabel = (pageId: string): string => {
+    const status = contentStatus[pageId]?.status;
+    if (status === 'SUCCESS') {
+      const chunks = contentStatus[pageId]?.chunkCount ?? 0;
+      return `Content captured (${chunks} chunks)`;
+    }
+    if (status === 'FAILED') return 'Content unavailable';
+    return 'Content not captured';
+  };
+
+  const evidenceTitle = (pageId: string): string => evidenceLabel(pageId);
+
+  const evidenceDot = (pageId: string) => {
+    const status = contentStatus[pageId]?.status;
+    const color =
+      status === 'SUCCESS'
+        ? 'var(--status-active)'
+        : status === 'FAILED'
+          ? 'var(--status-danger)'
+          : 'var(--text-faint)';
+    const label =
+      status === 'SUCCESS' ? '● captured' : status === 'FAILED' ? '● unavailable' : '○ not captured';
+    return <span style={{ color }}>{label}</span>;
+  };
 
   if (loading && pages.length === 0) {
     return (
@@ -153,6 +195,7 @@ export default function PagesView({ sessionId }: Props) {
                   <th className="py-2 px-3">Title</th>
                   <th className="py-2 px-3">Domain</th>
                   <th className="py-2 px-3">Authors</th>
+                  <th className="py-2 px-3">Evidence</th>
                   <th className="py-2 px-3 text-right">Citations</th>
                 </tr>
               </thead>
@@ -171,6 +214,9 @@ export default function PagesView({ sessionId }: Props) {
                     </td>
                     <td className="py-2 px-3 text-[11px] text-[var(--text-muted)] truncate max-w-[150px]">
                       {page.authors?.join(', ') || '—'}
+                    </td>
+                    <td className="py-2 px-3 text-[11px] font-mono" title={evidenceTitle(page.id)}>
+                      {evidenceDot(page.id)}
                     </td>
                     <td className="py-2 px-3 text-right font-mono text-[11px] text-[var(--text-secondary)]">
                       {page.citationCount || '—'}
@@ -206,7 +252,7 @@ export default function PagesView({ sessionId }: Props) {
 
                 <div className="pt-2 mt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-[10px] font-mono text-[var(--text-faint)]">
                   <span>{page.citationCount ? `${page.citationCount} cited` : 'Document'}</span>
-                  <span>{page.visitCount} visits</span>
+                  <span title={evidenceTitle(page.id)}>{evidenceDot(page.id)} · {page.visitCount} visits</span>
                 </div>
               </div>
             ))}
