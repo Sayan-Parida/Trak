@@ -23,11 +23,19 @@ public class PageVisitService {
     private final PageVisitRepository pageVisitRepository;
     private final BrowserEventRepository browserEventRepository;
 
-    public PageVisitService(PageVisitRepository pageVisitRepository, BrowserEventRepository browserEventRepository) {
+    public PageVisitService(PageVisitRepository pageVisitRepository,
+                            BrowserEventRepository browserEventRepository) {
         this.pageVisitRepository = pageVisitRepository;
         this.browserEventRepository = browserEventRepository;
     }
 
+    /**
+     * Creates or updates the PageVisit aggregate for (url, sessionId).
+     *
+     * <p>Runs inside the caller's transaction. Locking is the caller's
+     * responsibility (EventIngestionService acquires KeyedLock before
+     * opening the transaction).
+     */
     @Transactional
     public PageVisit createOrUpdatePageVisit(String url, String title, String sessionId, Instant timestamp) {
         if (url == null || url.isBlank() || sessionId == null || sessionId.isBlank()) {
@@ -38,14 +46,14 @@ public class PageVisitService {
         if (existing.isPresent()) {
             PageVisit visit = existing.get();
             visit.setVisitCount(visit.getVisitCount() + 1);
-            if (timestamp.isAfter(visit.getLastVisited())) {
+            if (timestamp != null && (visit.getLastVisited() == null || timestamp.isAfter(visit.getLastVisited()))) {
                 visit.setLastVisited(timestamp);
             }
             if (title != null && !title.isBlank()) {
                 visit.setTitle(title);
                 visit.setNormalizedTitle(ResearchTextNormalizer.normalize(title));
             }
-            if (visit.getNormalizedDomain() == null) {
+            if (visit.getNormalizedDomain() == null && visit.getDomain() != null) {
                 visit.setNormalizedDomain(ResearchTextNormalizer.normalize(visit.getDomain()));
             }
             return pageVisitRepository.save(visit);
@@ -53,12 +61,18 @@ public class PageVisitService {
             PageVisit visit = new PageVisit();
             visit.setUrl(url);
             visit.setSessionId(sessionId);
-            visit.setFirstVisited(timestamp);
-            visit.setLastVisited(timestamp);
+            Instant eventTime = timestamp != null ? timestamp : Instant.now();
+            visit.setFirstVisited(eventTime);
+            visit.setLastVisited(eventTime);
             visit.setTitle(title);
-            visit.setDomain(extractDomain(url));
-            visit.setNormalizedTitle(ResearchTextNormalizer.normalize(title));
-            visit.setNormalizedDomain(ResearchTextNormalizer.normalize(visit.getDomain()));
+            String domain = extractDomain(url);
+            visit.setDomain(domain);
+            if (title != null && !title.isBlank()) {
+                visit.setNormalizedTitle(ResearchTextNormalizer.normalize(title));
+            }
+            if (domain != null) {
+                visit.setNormalizedDomain(ResearchTextNormalizer.normalize(domain));
+            }
             visit.setVisitCount(1);
             visit.setDurationMs(0);
             return pageVisitRepository.save(visit);

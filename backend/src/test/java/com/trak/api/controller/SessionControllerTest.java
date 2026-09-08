@@ -5,7 +5,9 @@ import com.trak.api.dto.ResearchMemoryResponse;
 import com.trak.api.dto.SessionCreateRequest;
 import com.trak.api.dto.SessionUpdateRequest;
 import com.trak.domain.model.EventType;
+import com.trak.domain.model.PageVisit;
 import com.trak.domain.model.ResearchSession;
+import com.trak.service.EventIngestionService;
 import com.trak.service.ResearchMemoryService;
 import com.trak.service.ResearchSessionService;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Instant;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -33,6 +37,9 @@ class SessionControllerTest {
 
     @Autowired
     private ResearchMemoryService researchMemoryService;
+
+    @Autowired
+    private EventIngestionService eventIngestionService;
 
     @Test
     void createSession() throws Exception {
@@ -143,7 +150,8 @@ class SessionControllerTest {
 
         String pageUrl = "https://example.com/page1";
         String pageTitle = "Example Page 1";
-        PageVisit page = researchMemoryService.getClass().getDeclaredMethod("createOrUpdatePageVisit", String.class, String.class, String.class, Instant.class).invoke(researchMemoryService, pageUrl, pageTitle, session.getId(), Instant.now());
+        eventIngestionService.ingestEvent(new com.trak.api.dto.BrowserEventRequest(
+                "NAVIGATION", pageUrl, pageTitle, 1, 1, "link", "", Instant.now().toEpochMilli(), session.getId()));
 
         mockMvc.perform(get("/api/sessions/" + session.getId() + "/research-memory"))
                 .andExpect(status().isOk())
@@ -166,13 +174,19 @@ class SessionControllerTest {
     void getResearchMemorySearchOnlySession() throws Exception {
         ResearchSession session = sessionService.createSession("Search Only Session");
 
+        // Ingest a search navigation event — this creates both a BrowserEvent
+        // (needed for totalEvents) and a SearchQuery via SearchDetector.
+        String searchUrl = "https://www.google.com/search?q=test+search+query";
+        eventIngestionService.ingestEvent(new com.trak.api.dto.BrowserEventRequest(
+                "NAVIGATION", searchUrl, "test search query - Google Search",
+                1, 1, "link", "", Instant.now().toEpochMilli(), session.getId()));
+
         mockMvc.perform(get("/api/sessions/" + session.getId() + "/research-memory"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.searches").exists())
                 .andExpect(jsonPath("$.searches.length()").value(1))
-                .andExpect(jsonPath("$.searches[0].queryText").doesNotExist())
-                .andExpect(jsonPath("$.activity.length()").value(1))
-                .andExpect(jsonPath("$.activity[0].type").value("SEARCH"))
+                .andExpect(jsonPath("$.searches[0].queryText").value("test search query"))
+                .andExpect(jsonPath("$.activity.length()").value(2))
                 .andExpect(jsonPath("$.summary.totalSearches").value(1))
                 .andExpect(jsonPath("$.summary.totalEvents").value(1));
     }

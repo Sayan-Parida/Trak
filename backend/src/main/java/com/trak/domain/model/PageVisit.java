@@ -11,6 +11,10 @@ import java.util.UUID;
         @Index(name = "idx_page_visit_url_session", columnList = "url, session_id"),
         @Index(name = "idx_page_visit_normalized_title", columnList = "normalized_title"),
         @Index(name = "idx_page_visit_normalized_domain", columnList = "normalized_domain")
+}, uniqueConstraints = {
+        // Final protection against concurrent first-visit inserts for the same key.
+        // Optimistic locking (@Version) cannot protect a row that does not exist yet.
+        @UniqueConstraint(name = "uq_page_visit_url_session", columnNames = {"url", "session_id"})
 })
 public class PageVisit {
 
