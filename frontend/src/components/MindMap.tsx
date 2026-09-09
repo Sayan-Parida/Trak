@@ -26,8 +26,8 @@ interface Props {
   sessionId: string;
 }
 
-const nodeWidth = 260;
-const nodeHeight = 110;
+const nodeWidth = 240;
+const nodeHeight = 100;
 
 const getLayoutedElements = (
   nodes: Node[], 
@@ -39,8 +39,8 @@ const getLayoutedElements = (
   
   dagreGraph.setGraph({ 
     rankdir: direction,
-    nodesep: 45,
-    ranksep: 75,
+    nodesep: 35,
+    ranksep: 40,
     marginx: 30,
     marginy: 30
   });
@@ -323,7 +323,7 @@ function InnerMindMap({ sessionId }: Props) {
           onPaneClick={onPaneClick}
           onMove={handleViewportChange}
           nodeTypes={nodeTypes}
-          minZoom={0.1}
+          minZoom={0.5}
           maxZoom={2.5}
           fitView
           fitViewOptions={{ padding: 0.15 }}

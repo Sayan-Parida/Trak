@@ -105,10 +105,18 @@ public class EventIngestionService {
                         query.setSourceUrl(event.getUrl());
                         query.setTimestamp(timestamp);
                         query.setSessionId(event.getSessionId());
-                        if (visit != null) {
-                            query.setPageVisitId(visit.getId());
+                        
+                        // Dedup: skip if a SearchQuery with the same (sessionId, normalizedQuery, sourceUrl, timestamp) already exists
+                        SearchQuery existing = searchQueryRepository.findBySessionIdAndNormalizedQueryAndSourceUrlAndTimestamp(
+                                event.getSessionId(), query.getNormalizedQuery(), query.getSourceUrl(), timestamp);
+                        if (existing != null) {
+                            // Already recorded; skip saving duplicate
+                        } else {
+                            if (visit != null) {
+                                query.setPageVisitId(visit.getId());
+                            }
+                            searchIndexService.indexSearch(searchQueryRepository.save(query));
                         }
-                        searchIndexService.indexSearch(searchQueryRepository.save(query));
                     });
                 }
 

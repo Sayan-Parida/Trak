@@ -80,4 +80,17 @@ class SearchDetectorTest {
         Optional<SearchDetector.SearchResult> result = detector.detect("https://notbing.com/search?q=test");
         assertFalse(result.isPresent());
     }
+
+    @Test
+    void doesNotDetectChromeScheme() {
+        // chrome://newtab/ and other chrome:// URLs should never be detected as searches
+        Optional<SearchDetector.SearchResult> result1 = detector.detect("chrome://newtab/");
+        assertFalse(result1.isPresent(), "chrome://newtab/ must not be detected as a search");
+        
+        Optional<SearchDetector.SearchResult> result2 = detector.detect("chrome://settings");
+        assertFalse(result2.isPresent(), "chrome://settings must not be detected as a search");
+        
+        Optional<SearchDetector.SearchResult> result3 = detector.detect("chrome-extension://some-extension/id");
+        assertFalse(result3.isPresent(), "chrome-extension:// must not be detected as a search");
+    }
 }

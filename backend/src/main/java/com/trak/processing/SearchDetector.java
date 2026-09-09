@@ -26,6 +26,9 @@ public class SearchDetector {
         if (urlString == null || urlString.isBlank()) {
             return Optional.empty();
         }
+        if (urlString.startsWith("chrome:")) {
+            return Optional.empty();
+        }
         try {
             URI uri = new URI(urlString);
             String host = uri.getHost();

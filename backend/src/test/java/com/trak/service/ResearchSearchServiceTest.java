@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -138,6 +139,51 @@ class ResearchSearchServiceTest {
     void handlesEmptyAndUnknownQueries() {
         assertTrue(service.search("   ").results().isEmpty());
         assertTrue(service.search("unknown").results().isEmpty());
+    }
+
+    @Test
+    void researchMapSearchReturnsNewlyIngestedData() throws Exception {
+        // Given: a search event and a page visit are ingested and indexed
+        // Set up the search index with data about "spring boot"
+        when(indexService.search(anyString(), anyInt())).thenReturn(List.of(
+                new ResearchSearchIndexService.IndexHit("s1", "SEARCH", "s1", "session-1", 
+                        Instant.parse("2026-01-01T00:00:00Z").toString(), 
+                        "https://www.google.com/search?q=spring+boot", "Google", -1.0),
+                new ResearchSearchIndexService.IndexHit("p1", "PAGE", "p1", "session-1", 
+                        Instant.parse("2026-01-01T00:00:00Z").toString(), 
+                        "https://example.com/spring-boot-article", "example.com", -1.0)
+        ));
+        
+        // And set up the search repository to return a SearchQuery for "spring boot"
+        SearchQuery search = new SearchQuery();
+        search.setId("s1");
+        search.setSessionId("session-1");
+        search.setQueryText("spring boot");
+        search.setNormalizedQuery("spring boot");
+        search.setEngine("Google");
+        search.setSourceUrl("https://www.google.com/search?q=spring+boot");
+        search.setTimestamp(Instant.parse("2026-01-01T00:00:00Z"));
+        when(searchRepository.findById("s1")).thenReturn(Optional.of(search));
+        
+        // And set up the page repository to return a PageVisit
+        PageVisit page = new PageVisit();
+        page.setId("p1");
+        page.setSessionId("session-1");
+        page.setTitle("Spring Boot Article");
+        page.setUrl("https://example.com/spring-boot-article");
+        page.setDomain("example.com");
+        page.setFirstVisited(Instant.parse("2026-01-01T00:00:00Z"));
+        page.setLastVisited(Instant.parse("2026-01-01T00:00:00Z"));
+        page.setVisitCount(1);
+        when(pageRepository.findById("p1")).thenReturn(Optional.of(page));
+        
+        // When: search is performed via the research search API
+        // Then: the search should find the newly ingested data
+        ResearchSearchResponse response = service.search("spring boot");
+        
+        // Then: the search should find results from the indexed data
+        assertTrue(response.totalResults() > 0, 
+                "Research map search should find indexed data");
     }
 
     @Test

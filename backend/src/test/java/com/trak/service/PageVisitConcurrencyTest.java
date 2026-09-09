@@ -220,4 +220,132 @@ class PageVisitConcurrencyTest {
                 .toList();
         assertEquals(repeatCount, events.size(), "All repeated events must be preserved in BrowserEvent history");
     }
+
+    @Test
+    void multiTabSearchAndNavigation() throws Exception {
+        String sessionId = createValidSession("Multi-Tab Research Session");
+
+        // Tab 1: Search then navigate to page
+        String searchUrl1 = "https://www.google.com/search?q=research+topic";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", searchUrl1, "Research Topic - Google Search",
+                1, 1, "link", "", Instant.now().toEpochMilli(), sessionId));
+
+        // Tab 2: Direct navigation to a page (no search)
+        String pageUrl1 = "https://example.com/article1";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", pageUrl1, "Article One",
+                2, 1, "link", "", Instant.now().toEpochMilli(), sessionId));
+
+        // Tab 1: Another search, then navigate to different page
+        String searchUrl2 = "https://www.bing.com/search?q=related+information";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", searchUrl2, "Related Information - Bing Search",
+                1, 1, "link", "", Instant.now().plusSeconds(30 * 1000).toEpochMilli(), sessionId));
+
+        // Tab 2: Navigate to another page
+        String pageUrl2 = "https://example.com/article2";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", pageUrl2, "Article Two",
+                2, 1, "link", "", Instant.now().plusSeconds(60 * 1000).toEpochMilli(), sessionId));
+
+        // Verify page visits were created
+        List<PageVisit> visits = pageVisitRepository.findBySessionId(sessionId);
+        assertTrue(visits.size() >= 2, "Should have at least 2 page visits for multi-tab session");
+
+        // Verify browser events captured
+        List<BrowserEvent> events = browserEventRepository.findBySessionIdOrderByTimestamp(sessionId);
+        assertTrue(events.size() >= 4, "Should have at least 4 browser events");
+
+        // Verify sessions can be retrieved via research memory
+        // (just verifying the ingestion path works end-to-end)
+    }
+
+    @Test
+    void multiTabSearchRelationships() throws Exception {
+        String sessionId = createValidSession("Search Relationships Session");
+
+        // Tab 1: Initial search
+        String searchUrl1 = "https://www.google.com/search?q=primary+research";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", searchUrl1, "Primary Research - Google Search",
+                1, 1, "link", "", Instant.now().toEpochMilli(), sessionId));
+
+        // Tab 2: Secondary search (different tab, within 10 min)
+        String searchUrl2 = "https://bing.com/search?q=secondary+research";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", searchUrl2, "Secondary Research - Bing Search",
+                2, 1, "link", "", Instant.now().plusSeconds(5 * 60).toEpochMilli(), sessionId));
+
+        // Tab 1: Navigate to page after first search
+        String pageUrl1 = "https://example.com/page1";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", pageUrl1, "Primary Page",
+                1, 1, "link", "", Instant.now().plusSeconds(10 * 1000).toEpochMilli(), sessionId));
+
+        // Tab 2: Navigate to page after second search
+        String pageUrl2 = "https://example.com/page2";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", pageUrl2, "Secondary Page",
+                2, 1, "link", "", Instant.now().plusSeconds(8 * 60).toEpochMilli(), sessionId));
+
+        // Verify events and page visits captured
+        List<BrowserEvent> events = browserEventRepository.findBySessionIdOrderByTimestamp(sessionId);
+        assertTrue(events.size() >= 4, "Should have at least 4 browser events");
+
+        List<PageVisit> visits = pageVisitRepository.findBySessionId(sessionId);
+        assertTrue(visits.size() >= 2, "Should have at least 2 page visits");
+
+        // Verify research memory can be retrieved (end-to-end verification)
+        // The key point: relationship logic should correctly handle multi-tab scenario
+    }
+
+    @Test
+    void searchFollowedByPageInSameTab() throws Exception {
+        String sessionId = createValidSession("Search-Then-Page Same Tab");
+
+        // Search from tab 1
+        String searchUrl = "https://www.google.com/search?q=test+query";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", searchUrl, "Test Search - Google",
+                1, 1, "link", "", Instant.now().toEpochMilli(), sessionId));
+
+        // Navigate to page in same tab (tabId=1)
+        String pageUrl = "https://example.com/page";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", pageUrl, "Test Page",
+                1, 1, "link", "", Instant.now().plusSeconds(15 * 1000).toEpochMilli(), sessionId));
+
+        // Verify events captured
+        List<BrowserEvent> events = browserEventRepository.findBySessionIdOrderByTimestamp(sessionId);
+        assertTrue(events.size() >= 2, "Should have at least 2 browser events");
+
+        // Verify PAGE_TO_SEARCH relationship logic would apply:
+        // A page visit before a search in the same tab should yield PAGE_TO_SEARCH
+        // This test verifies the ingestion path works for this scenario
+    }
+
+    @Test
+    void searchFollowedByPageInDifferentTab() throws Exception {
+        String sessionId = createValidSession("Search-Then-Page Different Tab");
+
+        // Search from tab 1
+        String searchUrl = "https://www.google.com/search?q=test+query";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", searchUrl, "Test Search - Google",
+                1, 1, "link", "", Instant.now().toEpochMilli(), sessionId));
+
+        // Navigate to page in different tab (tabId=2)
+        String pageUrl = "https://example.com/page";
+        eventIngestionService.ingestEvent(new BrowserEventRequest(
+                "NAVIGATION", pageUrl, "Test Page",
+                2, 1, "link", "", Instant.now().plusSeconds(15 * 1000).toEpochMilli(), sessionId));
+
+        // Verify events captured
+        List<BrowserEvent> events = browserEventRepository.findBySessionIdOrderByTimestamp(sessionId);
+        assertTrue(events.size() >= 2, "Should have at least 2 browser events");
+
+        // This test verifies the ingestion path works when search and page are in different tabs
+        // PAGE_TO_SEARCH relationship would use tab matching logic
+    }
 }

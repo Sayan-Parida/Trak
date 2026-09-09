@@ -161,15 +161,20 @@ public class ResearchSessionService {
             ));
         }
 
-        // Simple edges from searches to pages if page was visited after search
+        // RESULTS_IN edges using SearchQuery.pageVisitId as authoritative provenance.
+        // A SearchQuery is linked to the PageVisit created from the same ingestEvent()
+        // call that triggered search detection. Only that PageVisit becomes RESULTS_IN;
+        // no timestamp heuristic, no false connections from pre-search page visits.
         for (SearchQuery sq : searches) {
-            for (PageVisit pv : pages) {
-                if (pv.getFirstVisited().isAfter(sq.getTimestamp()) &&
-                    pv.getFirstVisited().isBefore(sq.getTimestamp().plusSeconds(600))) {
+            if (sq.getPageVisitId() != null) {
+                Optional<PageVisit> matchingPage = pages.stream()
+                        .filter(pv -> pv.getId().equals(sq.getPageVisitId()))
+                        .findFirst();
+                matchingPage.ifPresent(pv -> {
                     edges.add(new MindMapResponse.MindMapEdge(
-                            sq.getId(), pv.getId(), "RESULTS_IN", "Visited after search"
+                            sq.getId(), pv.getId(), "RESULTS_IN", "Page visited after search in same ingestion event"
                     ));
-                }
+                });
             }
         }
 

@@ -110,9 +110,11 @@ async function isIncognito(tabId: number): Promise<boolean> {
 
 chrome.tabs.onCreated.addListener(async (tab) => {
   if (tab.incognito) return;
+  const url = tab.url || tab.pendingUrl;
+  if (url != null && (url.startsWith('chrome://') || url.startsWith('chrome-extension://') || url.startsWith('about:'))) return;
   const event: BrowserEventRequest = {
     eventType: 'TAB_CREATED',
-    url: tab.url || tab.pendingUrl,
+    url: url,
     title: tab.title,
     tabId: tab.id!,
     windowId: tab.windowId,
@@ -150,10 +152,12 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   try {
     const tab = await chrome.tabs.get(activeInfo.tabId);
     if (tab.incognito) return;
+    const url = tab.url;
+    if (url != null && (url.startsWith('chrome://') || url.startsWith('chrome-extension://') || url.startsWith('about:'))) return;
 
     const event: BrowserEventRequest = {
       eventType: 'TAB_ACTIVATED',
-      url: tab.url,
+      url: url,
       title: tab.title,
       tabId: activeInfo.tabId,
       windowId: activeInfo.windowId,
