@@ -26,6 +26,10 @@ interface CustomNodeProps {
     tags?: string[];
     isDimmed?: boolean;
     isFocused?: boolean;
+    showTypeBadge?: boolean;
+    typeBadgeBg?: string;
+    typeBadgeFg?: string;
+    typeBadgeLabel?: string;
   };
   selected?: boolean;
 }
@@ -38,7 +42,11 @@ const NodeWrapper = memo(({
   accentColor,
   accentBg,
   typeLabel,
-  icon: Icon
+  icon: Icon,
+  showTypeBadge,
+  typeBadgeBg,
+  typeBadgeFg,
+  typeBadgeLabel
 }: {
   children: React.ReactNode;
   selected?: boolean;
@@ -48,6 +56,10 @@ const NodeWrapper = memo(({
   accentBg: string;
   typeLabel: string;
   icon: any;
+  showTypeBadge?: boolean;
+  typeBadgeBg?: string;
+  typeBadgeFg?: string;
+  typeBadgeLabel?: string;
 }) => {
   return (
     <div
@@ -114,6 +126,13 @@ const NodeWrapper = memo(({
           <Icon className="w-2.5 h-2.5" />
           <span>{typeLabel}</span>
         </span>
+        {showTypeBadge && (
+          <span className="ml-1 text-[0.65em] font-medium rounded-full px-1.5 py-0.5 text-xs"
+            style={{ backgroundColor: typeBadgeBg, color: typeBadgeFg }}
+          >
+            {typeBadgeLabel}
+          </span>
+        )}
       </div>
 
       {children}
@@ -158,6 +177,10 @@ export const PageNode = memo(({ data, selected }: CustomNodeProps) => {
       accentBg="var(--node-page-bg)"
       typeLabel="Source"
       icon={Globe}
+      showTypeBadge
+      typeBadgeBg="var(--node-page)"
+      typeBadgeFg="var(--text-primary)"
+      typeBadgeLabel="PAGE"
     >
       <div className="text-xs font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-1">
         {data.label}
@@ -208,6 +231,10 @@ export const SearchNode = memo(({ data, selected }: CustomNodeProps) => {
       accentBg="var(--node-search-bg)"
       typeLabel="Query"
       icon={Search}
+      showTypeBadge
+      typeBadgeBg="var(--node-search)"
+      typeBadgeFg="var(--text-primary)"
+      typeBadgeLabel="SEARCH"
     >
       <div className="text-xs italic text-[var(--text-primary)] leading-snug mb-1 font-serif">
         &ldquo;{data.label}&rdquo;

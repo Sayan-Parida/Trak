@@ -12,11 +12,12 @@ import { SUGGESTED_QUERIES } from '../api/mockData';
 interface Props {
   activeSessionId?: string | null;
   onOpenSession: (sessionId: string) => void;
+  onFocusNode?: (nodeId: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-export default function ResearchSearch({ activeSessionId, onOpenSession, isOpen = false, onClose }: Props) {
+export default function ResearchSearch({ activeSessionId, onOpenSession, onFocusNode, isOpen = false, onClose }: Props) {
   const [query, setQuery] = useState('');
   const [data, setData] = useState<ResearchSearchData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -189,8 +190,16 @@ export default function ResearchSearch({ activeSessionId, onOpenSession, isOpen 
                   <div 
                     key={res.id}
                     onClick={() => {
-                      onOpenSession(res.sessionId);
-                      setShowDropdown(false);
+                      // If the result belongs to the currently displayed session,
+                      // focus/center that node instead of navigating away.
+                      if (activeSessionId && res.sessionId === activeSessionId && onFocusNode) {
+                        onFocusNode(res.id);
+                        setShowDropdown(false);
+                      } else {
+                        // Result belongs to another session or no active session: navigate normally.
+                        onOpenSession(res.sessionId);
+                        setShowDropdown(false);
+                      }
                     }}
                     className="p-2 rounded hover:bg-[var(--surface-hover)] cursor-pointer transition-colors"
                   >

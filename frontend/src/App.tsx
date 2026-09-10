@@ -24,9 +24,10 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
 
-  // Sync theme with DOM and localStorage
+// Sync theme with DOM and localStorage
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('researchmind-theme', theme);
@@ -113,6 +114,11 @@ export default function App() {
                   setSelectedSessionId(sId);
                   setActiveTab('mindmap');
                   setIsSearchOpen(false);
+                  setFocusNodeId(null);
+                }}
+                onFocusNode={(nodeId) => {
+                  setFocusNodeId(nodeId);
+                  setIsSearchOpen(false);
                 }}
               />
             </div>
@@ -176,7 +182,7 @@ export default function App() {
             /* Active Views */
             <>
               {activeTab === 'mindmap' && (
-                <MindMap sessionId={selectedSessionId} />
+                <MindMap sessionId={selectedSessionId} focusNodeId={focusNodeId} />
               )}
               {activeTab === 'timeline' && (
                 <Timeline 

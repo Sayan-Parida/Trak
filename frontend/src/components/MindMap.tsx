@@ -24,6 +24,7 @@ import { Loader2 } from 'lucide-react';
 
 interface Props {
   sessionId: string;
+  focusNodeId?: string | null;
 }
 
 const nodeWidth = 240;
