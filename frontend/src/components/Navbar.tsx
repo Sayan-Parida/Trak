@@ -50,7 +50,7 @@ export default function Navbar({
 
   return (
     <header 
-      className="flex items-center justify-between px-3 h-10 border-b z-30 select-none shrink-0"
+      className="flex items-center justify-between px-4 h-12 border-b z-30 select-none shrink-0"
       style={{
         backgroundColor: 'var(--surface-base)',
         borderColor: 'var(--border-subtle)',
@@ -60,13 +60,13 @@ export default function Navbar({
       <div className="flex items-center gap-2 min-w-0">
         <div className="flex items-center gap-1.5 shrink-0">
           <div 
-            className="w-5 h-5 rounded flex items-center justify-center text-white"
+            className="w-6 h-6 rounded-[var(--radius-xs)] flex items-center justify-center text-[var(--surface-base)]"
             style={{ backgroundColor: 'var(--accent)' }}
           >
             <Compass className="w-3 h-3" />
           </div>
-          <span className="text-xs font-semibold tracking-tight text-[var(--text-primary)]">
-            ResearchMind
+          <span className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
+            Pariet
           </span>
         </div>
 
@@ -74,7 +74,7 @@ export default function Navbar({
           <>
             <span className="text-[var(--text-faint)] text-xs">/</span>
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs text-[var(--text-secondary)] font-medium truncate max-w-[200px] sm:max-w-[280px]">
+              <span className="text-[13px] text-[var(--text-secondary)] font-medium truncate max-w-[200px] sm:max-w-[280px]">
                 {activeSession.title}
               </span>
               <span 
@@ -88,12 +88,12 @@ export default function Navbar({
 
       {/* Center: Clean View Tabs */}
       {activeSession && (
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-1 border border-[var(--border-subtle)] rounded-[var(--radius-sm)] p-1 bg-[var(--surface-subtle)]">
           <button
             onClick={() => onChangeTab('mindmap')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-xs)] text-sm font-medium transition-colors ${
               activeTab === 'mindmap'
-                ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] font-semibold'
+                ? 'bg-[var(--surface-base)] text-[var(--text-primary)] font-semibold shadow-[var(--shadow-xs)] border-b-2 border-[var(--accent)]'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
             }`}
           >
@@ -103,9 +103,9 @@ export default function Navbar({
 
           <button
             onClick={() => onChangeTab('timeline')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-xs)] text-sm font-medium transition-colors ${
               activeTab === 'timeline'
-                ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] font-semibold'
+                ? 'bg-[var(--surface-base)] text-[var(--text-primary)] font-semibold shadow-[var(--shadow-xs)] border-b-2 border-[var(--accent)]'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
             }`}
           >
@@ -115,9 +115,9 @@ export default function Navbar({
 
           <button
             onClick={() => onChangeTab('pages')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-xs)] text-sm font-medium transition-colors ${
               activeTab === 'pages'
-                ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] font-semibold'
+                ? 'bg-[var(--surface-base)] text-[var(--text-primary)] font-semibold shadow-[var(--shadow-xs)] border-b-2 border-[var(--accent)]'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
             }`}
           >
@@ -131,7 +131,7 @@ export default function Navbar({
       <div className="flex items-center gap-1.5">
         <button
           onClick={onFocusSearch}
-          className="flex items-center gap-2 px-2 py-1 rounded text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] border border-[var(--border-subtle)] transition-colors"
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-sm)] text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] border border-[var(--border-subtle)] transition-colors"
           title="Search or research (⌘K)"
         >
           <Search className="w-3 h-3" />
@@ -163,7 +163,7 @@ export default function Navbar({
 
           {showSettingsMenu && (
             <div 
-              className="absolute right-0 mt-1 w-44 rounded-lg p-1 z-40 border text-xs shadow-md"
+              className="absolute right-0 mt-2 w-48 rounded-[var(--radius-md)] p-1.5 z-40 border text-xs shadow-panel"
               style={{
                 backgroundColor: 'var(--surface-elevated)',
                 borderColor: 'var(--border-medium)',

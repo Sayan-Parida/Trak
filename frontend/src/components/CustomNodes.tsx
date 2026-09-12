@@ -63,11 +63,12 @@ const NodeWrapper = memo(({
 }) => {
   return (
     <div
-      className="relative rounded p-2.5 transition-all duration-150 cursor-pointer select-none"
+      className="relative rounded-[var(--radius-md)] p-3 transition-all duration-150 cursor-pointer select-none border-l-2"
       style={{
         width: 250,
         backgroundColor: 'var(--surface-base)',
-        border: `1px solid ${selected || isFocused ? 'var(--text-primary)' : 'var(--border-subtle)'}`,
+        border: `1px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-subtle)'}`,
+        borderLeft: `2px solid ${accentColor}`,
         boxShadow: selected || isFocused ? 'var(--shadow-md)' : 'var(--shadow-xs)',
         opacity: isDimmed ? 0.2 : 1,
       }}
@@ -118,16 +119,16 @@ const NodeWrapper = memo(({
       />
 
       {/* Type badge line */}
-      <div className="flex items-center justify-between gap-1.5 mb-1 text-[10px] font-mono">
+      <div className="flex items-center justify-between gap-1.5 mb-2 text-[9px] font-mono uppercase tracking-[0.08em]">
         <span 
-          className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded font-medium"
+          className="inline-flex items-center gap-1 px-1 py-0.5 rounded-[var(--radius-xs)] font-semibold"
           style={{ backgroundColor: accentBg, color: accentColor }}
         >
           <Icon className="w-2.5 h-2.5" />
           <span>{typeLabel}</span>
         </span>
         {showTypeBadge && (
-          <span className="ml-1 text-[0.65em] font-medium rounded-full px-1.5 py-0.5 text-xs"
+          <span className="ml-1 text-[0.65em] font-semibold rounded-[var(--radius-xs)] px-1.5 py-0.5 text-xs tracking-[0.08em]"
             style={{ backgroundColor: typeBadgeBg, color: typeBadgeFg }}
           >
             {typeBadgeLabel}
@@ -153,11 +154,11 @@ export const PaperNode = memo(({ data, selected }: CustomNodeProps) => {
       typeLabel="Paper"
       icon={BookOpen}
     >
-      <div className="text-xs font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-1">
+      <div className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-2">
         {data.label}
       </div>
 
-      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-1 border-t border-[var(--border-subtle)]">
+      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">
         <span className="truncate max-w-[140px]">{data.domain || 'academic'}</span>
         {data.citationCount !== undefined && <span>{data.citationCount} cited</span>}
       </div>
@@ -182,11 +183,11 @@ export const PageNode = memo(({ data, selected }: CustomNodeProps) => {
       typeBadgeFg="var(--text-primary)"
       typeBadgeLabel="PAGE"
     >
-      <div className="text-xs font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-1">
+      <div className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-2">
         {data.label}
       </div>
 
-      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-1 border-t border-[var(--border-subtle)]">
+      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">
         <span className="truncate max-w-[180px]">{data.domain || data.url?.replace(/^https?:\/\//, '')}</span>
       </div>
     </NodeWrapper>
@@ -206,12 +207,12 @@ export const ConceptNode = memo(({ data, selected }: CustomNodeProps) => {
       typeLabel="Concept"
       icon={Sparkles}
     >
-      <div className="text-xs font-semibold text-[var(--text-primary)] leading-snug mb-1">
+      <div className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug mb-2">
         {data.label}
       </div>
 
       {data.abstract && (
-        <div className="text-[11px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
+        <div className="text-[12px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
           {data.abstract}
         </div>
       )}
@@ -236,11 +237,11 @@ export const SearchNode = memo(({ data, selected }: CustomNodeProps) => {
       typeBadgeFg="var(--text-primary)"
       typeBadgeLabel="SEARCH"
     >
-      <div className="text-xs italic text-[var(--text-primary)] leading-snug mb-1 font-serif">
+      <div className="text-[13px] italic text-[var(--text-primary)] leading-snug mb-2 font-serif">
         &ldquo;{data.label}&rdquo;
       </div>
 
-      <div className="text-[10px] font-mono text-[var(--text-muted)] pt-1 border-t border-[var(--border-subtle)]">
+      <div className="text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">
         Search expansion
       </div>
     </NodeWrapper>
@@ -260,12 +261,12 @@ export const InsightNode = memo(({ data, selected }: CustomNodeProps) => {
       typeLabel="Synthesis"
       icon={Cpu}
     >
-      <div className="text-xs font-semibold text-[var(--text-primary)] leading-snug mb-1">
+      <div className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug mb-2">
         {data.label}
       </div>
 
       {data.abstract && (
-        <div className="text-[11px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
+        <div className="text-[12px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
           {data.abstract}
         </div>
       )}
@@ -278,10 +279,11 @@ InsightNode.displayName = 'InsightNode';
 export const DomainNode = memo(({ data, selected }: CustomNodeProps) => {
   return (
     <div
-      className="px-2 py-1 rounded transition-colors select-none flex items-center gap-1.5"
+      className="px-2 py-1 rounded-[var(--radius-xs)] transition-colors select-none flex items-center gap-1.5 border-l-2"
       style={{
         backgroundColor: 'var(--surface-base)',
-        border: `1px solid ${selected ? 'var(--text-primary)' : 'var(--border-subtle)'}`,
+        border: `1px solid ${selected ? 'var(--accent)' : 'var(--border-subtle)'}`,
+        borderLeft: '2px solid var(--node-concept)',
         opacity: data.isDimmed ? 0.2 : 1,
       }}
     >
@@ -305,10 +307,10 @@ export const nodeTypes = {
       typeLabel="Session"
       icon={Compass}
     >
-      <div className="text-xs font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-1">
+      <div className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-2">
         {data.label}
       </div>
-      <div className="text-[10px] font-mono text-[var(--text-muted)] pt-1 border-t border-[var(--border-subtle)]">
+      <div className="text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">
         Root workspace
       </div>
     </NodeWrapper>

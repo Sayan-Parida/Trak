@@ -59,7 +59,7 @@ export default function NodeDetailPanel({
 
   return (
     <aside 
-      className="absolute top-3 right-3 z-20 w-80 max-w-[calc(100vw-24px)] max-h-[calc(100%-24px)] flex flex-col rounded-lg border shadow-panel select-none overflow-hidden"
+      className="absolute top-4 right-4 z-20 w-[22rem] max-w-[calc(100vw-32px)] max-h-[calc(100%-32px)] flex flex-col rounded-[var(--radius-md)] border shadow-panel select-none overflow-hidden"
       style={{
         backgroundColor: 'var(--surface-base)',
         borderColor: 'var(--border-subtle)',
@@ -67,7 +67,7 @@ export default function NodeDetailPanel({
     >
       {/* Header */}
       <div 
-        className="h-9 px-3 border-b flex items-center justify-between shrink-0"
+        className="h-11 px-4 border-b flex items-center justify-between shrink-0"
         style={{ borderColor: 'var(--border-subtle)', backgroundColor: 'var(--surface-subtle)' }}
       >
         <div className="flex items-center gap-1.5 min-w-0">
@@ -91,10 +91,10 @@ export default function NodeDetailPanel({
       </div>
 
       {/* Body Content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 text-xs">
+      <div className="flex-1 overflow-y-auto p-4 space-y-5 text-[13px]">
         {/* Title */}
         <div>
-          <h3 className="text-xs font-semibold text-[var(--text-primary)] leading-snug">
+          <h3 className="text-base font-semibold text-[var(--text-primary)] leading-snug">
             {data.label}
           </h3>
           {data.authors && data.authors.length > 0 && (
@@ -107,8 +107,8 @@ export default function NodeDetailPanel({
         {/* Abstract / Excerpt */}
         {data.abstract && (
           <div className="space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[var(--text-faint)] font-semibold">Summary</span>
-            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+            <span className="text-[10px] font-mono uppercase text-[var(--accent)] font-semibold tracking-[0.12em]">Summary</span>
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
               {data.abstract}
             </p>
           </div>
@@ -117,8 +117,8 @@ export default function NodeDetailPanel({
         {/* Key Insights (if synthesis) */}
         {data.insights && data.insights.length > 0 && (
           <div className="space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[var(--text-faint)] font-semibold">Key Findings</span>
-            <ul className="space-y-1 text-[11px] text-[var(--text-secondary)] pl-3 list-disc">
+            <span className="text-[10px] font-mono uppercase text-[var(--accent)] font-semibold tracking-[0.12em]">Key Findings</span>
+            <ul className="space-y-1.5 text-xs text-[var(--text-secondary)] pl-3 list-disc">
               {data.insights.map((ins, i) => (
                 <li key={i}>{ins}</li>
               ))}
@@ -129,7 +129,7 @@ export default function NodeDetailPanel({
         {/* Related Entities in Graph */}
         {connectedNodes.length > 0 && (
           <div className="space-y-1 pt-2 border-t border-[var(--border-subtle)]">
-            <span className="text-[10px] font-mono uppercase text-[var(--text-faint)] font-semibold">
+            <span className="text-[10px] font-mono uppercase text-[var(--accent)] font-semibold tracking-[0.12em]">
               Connections ({connectedNodes.length})
             </span>
             <div className="space-y-1 max-h-36 overflow-y-auto">
@@ -137,13 +137,13 @@ export default function NodeDetailPanel({
                 <button
                   key={cNode.id}
                   onClick={() => onSelectConnectedNode?.(cNode.id)}
-                  className="w-full text-left p-1.5 rounded hover:bg-[var(--surface-hover)] border border-[var(--border-subtle)] transition-colors flex items-center justify-between group"
+                  className="w-full text-left p-2 rounded-[var(--radius-sm)] hover:bg-[var(--surface-hover)] border border-[var(--border-subtle)] transition-colors flex items-center justify-between group"
                 >
                   <div className="min-w-0 pr-1">
                     <span className="text-[9px] font-mono text-[var(--text-faint)] uppercase block">
                       {cNode.relationship}
                     </span>
-                    <span className="text-[11px] font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] truncate block">
+                    <span className="text-xs font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] truncate block">
                       {cNode.label}
                     </span>
                   </div>

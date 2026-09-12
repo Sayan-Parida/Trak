@@ -67,12 +67,12 @@ export const MapControls = ({
 
   return (
     <>
-      {/* Top Right: Minimal Filter & Layout pill */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+      {/* Top Right: Canvas filters and export */}
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5">
         <div ref={filterRef} className="relative">
           <button
             onClick={() => setShowFilterMenu(!showFilterMenu)}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors border ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-sm)] text-xs transition-colors border ${
               activeFilter !== 'ALL'
                 ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] border-[var(--border-medium)] font-semibold'
                 : 'bg-[var(--surface-base)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:bg-[var(--surface-hover)]'
@@ -84,7 +84,7 @@ export const MapControls = ({
 
           {showFilterMenu && (
             <div 
-              className="absolute right-0 mt-1 w-36 rounded-lg p-1 z-20 border text-xs shadow-md"
+              className="absolute right-0 mt-2 w-40 rounded-[var(--radius-md)] p-1.5 z-20 border text-xs shadow-panel"
               style={{
                 backgroundColor: 'var(--surface-elevated)',
                 borderColor: 'var(--border-medium)',
@@ -118,7 +118,7 @@ export const MapControls = ({
         <button
           onClick={onToggleLayout}
           title={`Layout: ${layoutDirection === 'LR' ? 'Horizontal' : 'Vertical'}`}
-          className="p-1 rounded bg-[var(--surface-base)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:bg-[var(--surface-hover)] transition-colors"
+          className="p-1.5 rounded-[var(--radius-sm)] bg-[var(--surface-base)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:bg-[var(--surface-hover)] transition-colors"
         >
           <Layers className="w-3.5 h-3.5" />
         </button>
@@ -126,7 +126,7 @@ export const MapControls = ({
         <button
           onClick={handleExport}
           title="Export Graph JSON"
-          className="p-1 rounded bg-[var(--surface-base)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:bg-[var(--surface-hover)] transition-colors"
+          className="p-1.5 rounded-[var(--radius-sm)] bg-[var(--surface-base)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:bg-[var(--surface-hover)] transition-colors"
         >
           {copied ? <Check className="w-3.5 h-3.5 text-[var(--status-active)]" /> : <Download className="w-3.5 h-3.5" />}
         </button>
@@ -134,7 +134,7 @@ export const MapControls = ({
 
       {/* Bottom Left: Minimal Floating Canvas Viewport Bar */}
       <div 
-        className="absolute bottom-3 left-3 z-10 flex items-center gap-0.5 p-0.5 rounded border select-none"
+        className="absolute bottom-4 left-4 z-10 flex items-center gap-0.5 p-1 rounded-[var(--radius-md)] border select-none"
         style={{
           backgroundColor: 'var(--surface-base)',
           borderColor: 'var(--border-subtle)',
@@ -149,7 +149,7 @@ export const MapControls = ({
           <ZoomOut className="w-3.5 h-3.5" />
         </button>
 
-        <span className="px-1 text-[11px] font-mono text-[var(--text-muted)] min-w-[34px] text-center">
+        <span className="px-1 text-xs font-mono text-[var(--text-muted)] min-w-[40px] text-center">
           {Math.round(zoom * 100)}%
         </span>
 
@@ -192,9 +192,9 @@ export const MapControls = ({
         </button>
       </div>
 
-      {/* Top Left: Quiet Canvas Status */}
-      <div className="absolute top-3 left-3 z-10 pointer-events-none">
-        <span className="text-[10px] font-mono text-[var(--text-faint)]">
+      {/* Top Left: Canvas status */}
+      <div className="absolute top-4 left-4 z-10 pointer-events-none px-2 py-1 rounded-[var(--radius-xs)] border border-[var(--border-subtle)] bg-[var(--surface-base)]">
+        <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-[var(--text-muted)]">
           {nodeCount} nodes • {edgeCount} edges
         </span>
       </div>

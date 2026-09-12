@@ -82,7 +82,7 @@ export default function SessionList({
       <aside 
         className="h-full flex flex-col items-center py-2 border-r transition-all duration-200 z-10 shrink-0 select-none"
         style={{
-          width: 44,
+          width: 48,
           backgroundColor: 'var(--surface-base)',
           borderColor: 'var(--border-subtle)',
         }}
@@ -127,19 +127,19 @@ export default function SessionList({
     <aside 
       className="h-full flex flex-col border-r transition-all duration-200 z-10 shrink-0 select-none"
       style={{
-        width: 240,
+        width: 268,
         backgroundColor: 'var(--surface-base)',
         borderColor: 'var(--border-subtle)',
       }}
     >
       {/* Sidebar Header */}
       <div 
-        className="h-10 px-3 border-b flex items-center justify-between shrink-0"
+        className="h-12 px-4 border-b flex items-center justify-between shrink-0"
         style={{ borderColor: 'var(--border-subtle)' }}
       >
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold text-[var(--text-secondary)]">
-            Workspaces
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)]">
+            Research files
           </span>
           <span className="text-[10px] font-mono text-[var(--text-faint)]">
             ({sessions.length})
@@ -166,9 +166,9 @@ export default function SessionList({
       </div>
 
       {/* Filter / Search mini-bar */}
-      <div className="p-2 border-b space-y-1.5" style={{ borderColor: 'var(--border-subtle)' }}>
+      <div className="p-3.5 border-b space-y-2.5" style={{ borderColor: 'var(--border-subtle)' }}>
         <div 
-          className="flex items-center gap-1.5 px-2 py-1 rounded border bg-[var(--surface-subtle)] text-xs"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-sm)] border bg-[var(--surface-subtle)] text-xs"
           style={{ borderColor: 'var(--border-subtle)' }}
         >
           <Search className="w-3 h-3 text-[var(--text-faint)] shrink-0" />
@@ -182,7 +182,7 @@ export default function SessionList({
         </div>
 
         {/* Status filter tabs */}
-        <div className="flex items-center gap-1 text-[10px]">
+        <div className="flex items-center gap-1 text-[11px]">
           {(['ALL', 'ACTIVE', 'COMPLETED'] as const).map((st) => (
             <button
               key={st}
@@ -200,7 +200,7 @@ export default function SessionList({
       </div>
 
       {/* Clean Session Item List */}
-      <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
+      <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {loading && sessions.length === 0 ? (
           <div className="text-center py-6 text-xs text-[var(--text-muted)]">Loading...</div>
         ) : filteredSessions.length === 0 ? (
@@ -214,20 +214,20 @@ export default function SessionList({
               <div
                 key={session.id}
                 onClick={() => onSelectSession(session.id)}
-                className={`group px-2.5 py-2 rounded text-left transition-colors cursor-pointer flex flex-col gap-0.5 ${
+                className={`group px-3 py-2.5 rounded-[var(--radius-sm)] text-left transition-colors cursor-pointer flex flex-col gap-1 border border-transparent ${
                   isSelected 
-                    ? 'bg-[var(--surface-selected)] text-[var(--text-primary)]' 
+                    ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] border-l-2 border-[var(--accent)]' 
                     : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {/* Title and Favorite / Delete */}
-                <div className="flex items-center justify-between gap-1">
+                <div className="flex items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span 
                       className="w-1.5 h-1.5 rounded-full shrink-0"
                       style={{ backgroundColor: session.status === 'ACTIVE' ? 'var(--status-active)' : 'var(--status-muted)' }}
                     />
-                    <span className="text-xs font-medium truncate leading-tight">
+                    <span className="text-[13px] font-medium truncate leading-tight">
                       {session.title}
                     </span>
                   </div>
@@ -249,7 +249,7 @@ export default function SessionList({
                 </div>
 
                 {/* Minimal Meta */}
-                <div className="flex items-center gap-2 pl-3 text-[10px] font-mono text-[var(--text-muted)]">
+                <div className="flex items-center gap-2 pl-3 text-[11px] font-mono text-[var(--text-muted)]">
                   <span>{session.entityCount} nodes</span>
                   <span>•</span>
                   <span>{session.pageCount} sources</span>
@@ -265,7 +265,7 @@ export default function SessionList({
         className="h-8 px-3 border-t text-[10px] font-mono text-[var(--text-faint)] flex items-center justify-between shrink-0"
         style={{ borderColor: 'var(--border-subtle)' }}
       >
-        <span>ResearchMind Desktop</span>
+        <span>Pariet / local archive</span>
         <button
           onClick={() => {
             if (window.confirm('Reset sample research graphs?')) {
