@@ -42,6 +42,14 @@ export default function NodeDetailPanel({
 }: NodeDetailPanelProps) {
   const [copiedCitation, setCopiedCitation] = useState(false);
 
+  const recordAccent = data.type === 'SEARCH'
+    ? 'var(--node-search)'
+    : data.type === 'PAGE' || data.type === 'SOURCE_PAPER'
+      ? 'var(--node-page)'
+      : data.type === 'DOMAIN'
+        ? 'var(--text-secondary)'
+        : 'var(--accent)';
+
   if (!data) return null;
 
   const handleCopyBibtex = () => {
@@ -59,10 +67,13 @@ export default function NodeDetailPanel({
 
   return (
     <aside 
-      className="absolute top-4 right-4 z-20 w-[22rem] max-w-[calc(100vw-32px)] max-h-[calc(100%-32px)] flex flex-col rounded-[var(--radius-md)] border shadow-panel select-none overflow-hidden"
+      className="absolute top-5 right-5 z-20 w-[24rem] max-w-[calc(100vw-40px)] max-h-[calc(100%-40px)] flex flex-col rounded-[var(--radius-sm)] border shadow-panel select-none overflow-hidden"
       style={{
         backgroundColor: 'var(--surface-base)',
-        borderColor: 'var(--border-subtle)',
+        borderTop: '1px solid var(--border-subtle)',
+        borderRight: '1px solid var(--border-subtle)',
+        borderBottom: '1px solid var(--border-subtle)',
+        borderLeft: `3px solid ${recordAccent}`,
       }}
     >
       {/* Header */}
@@ -71,7 +82,7 @@ export default function NodeDetailPanel({
         style={{ borderColor: 'var(--border-subtle)', backgroundColor: 'var(--surface-subtle)' }}
       >
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-[10px] font-mono uppercase font-semibold text-[var(--text-muted)] tracking-wider">
+            <span className="text-[10px] font-mono uppercase font-semibold text-[var(--accent)] tracking-[0.14em]">
             {data.type.replace('_', ' ')}
           </span>
           {data.domain && (
@@ -94,7 +105,7 @@ export default function NodeDetailPanel({
       <div className="flex-1 overflow-y-auto p-4 space-y-5 text-[13px]">
         {/* Title */}
         <div>
-          <h3 className="text-base font-semibold text-[var(--text-primary)] leading-snug">
+          <h3 style={{ fontFamily: 'var(--font-display)' }} className="text-2xl font-semibold text-[var(--text-primary)] leading-[1.05] tracking-[-0.02em]">
             {data.label}
           </h3>
           {data.authors && data.authors.length > 0 && (
@@ -104,10 +115,35 @@ export default function NodeDetailPanel({
           )}
         </div>
 
+        <div className="grid grid-cols-2 gap-3 border-y border-[var(--border-subtle)] py-3 text-[10px] font-mono">
+          <div>
+            <span className="block uppercase tracking-[0.12em] text-[var(--text-faint)]">Record type</span>
+            <span className="mt-1 block text-[var(--text-secondary)]">{data.type.replace('_', ' ')}</span>
+          </div>
+          <div>
+            <span className="block uppercase tracking-[0.12em] text-[var(--text-faint)]">Last seen</span>
+            <span className="mt-1 block text-[var(--text-secondary)]">{data.timestamp ? new Date(data.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Not recorded'}</span>
+          </div>
+        </div>
+
+        {data.timestamp && (
+          <div className="border border-[var(--border-medium)] bg-[var(--surface-subtle)] px-3 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--node-concept)]">Last recorded activity</span>
+              <span className="text-[10px] font-mono text-[var(--text-muted)]">
+                {new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+            <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-secondary)]">
+              Last recorded activity for this {data.type === 'SEARCH' ? 'query' : 'record'}.
+            </p>
+          </div>
+        )}
+
         {/* Abstract / Excerpt */}
         {data.abstract && (
           <div className="space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[var(--accent)] font-semibold tracking-[0.12em]">Summary</span>
+            <span className="text-[10px] font-mono uppercase text-[var(--accent)] font-semibold tracking-[0.12em]">Research note</span>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
               {data.abstract}
             </p>
@@ -130,7 +166,7 @@ export default function NodeDetailPanel({
         {connectedNodes.length > 0 && (
           <div className="space-y-1 pt-2 border-t border-[var(--border-subtle)]">
             <span className="text-[10px] font-mono uppercase text-[var(--accent)] font-semibold tracking-[0.12em]">
-              Connections ({connectedNodes.length})
+              Path to this record ({connectedNodes.length})
             </span>
             <div className="space-y-1 max-h-36 overflow-y-auto">
               {connectedNodes.map((cNode) => (

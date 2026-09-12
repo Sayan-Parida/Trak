@@ -63,11 +63,13 @@ const NodeWrapper = memo(({
 }) => {
   return (
     <div
-      className="relative rounded-[var(--radius-md)] p-3 transition-all duration-150 cursor-pointer select-none border-l-2"
+      className="pariet-node relative rounded-[var(--radius-md)] p-3 transition-all duration-150 cursor-pointer select-none border-l-2"
       style={{
         width: 250,
         backgroundColor: 'var(--surface-base)',
-        border: `1px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-subtle)'}`,
+        borderTop: `1px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-subtle)'}`,
+        borderRight: `1px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-subtle)'}`,
+        borderBottom: `1px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-subtle)'}`,
         borderLeft: `2px solid ${accentColor}`,
         boxShadow: selected || isFocused ? 'var(--shadow-md)' : 'var(--shadow-xs)',
         opacity: isDimmed ? 0.2 : 1,
@@ -154,7 +156,7 @@ export const PaperNode = memo(({ data, selected }: CustomNodeProps) => {
       typeLabel="Paper"
       icon={BookOpen}
     >
-      <div className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-2">
+      <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] line-clamp-2 mb-2">
         {data.label}
       </div>
 
@@ -183,7 +185,7 @@ export const PageNode = memo(({ data, selected }: CustomNodeProps) => {
       typeBadgeFg="var(--text-primary)"
       typeBadgeLabel="PAGE"
     >
-      <div className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-2">
+      <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] line-clamp-2 mb-2">
         {data.label}
       </div>
 
@@ -207,7 +209,7 @@ export const ConceptNode = memo(({ data, selected }: CustomNodeProps) => {
       typeLabel="Concept"
       icon={Sparkles}
     >
-      <div className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug mb-2">
+      <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] mb-2">
         {data.label}
       </div>
 
@@ -237,7 +239,7 @@ export const SearchNode = memo(({ data, selected }: CustomNodeProps) => {
       typeBadgeFg="var(--text-primary)"
       typeBadgeLabel="SEARCH"
     >
-      <div className="text-[13px] italic text-[var(--text-primary)] leading-snug mb-2 font-serif">
+      <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] italic text-[var(--text-primary)] leading-[1.12] mb-2">
         &ldquo;{data.label}&rdquo;
       </div>
 
@@ -261,7 +263,7 @@ export const InsightNode = memo(({ data, selected }: CustomNodeProps) => {
       typeLabel="Synthesis"
       icon={Cpu}
     >
-      <div className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug mb-2">
+      <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] mb-2">
         {data.label}
       </div>
 
@@ -282,7 +284,9 @@ export const DomainNode = memo(({ data, selected }: CustomNodeProps) => {
       className="px-2 py-1 rounded-[var(--radius-xs)] transition-colors select-none flex items-center gap-1.5 border-l-2"
       style={{
         backgroundColor: 'var(--surface-base)',
-        border: `1px solid ${selected ? 'var(--accent)' : 'var(--border-subtle)'}`,
+        borderTop: `1px solid ${selected ? 'var(--accent)' : 'var(--border-subtle)'}`,
+        borderRight: `1px solid ${selected ? 'var(--accent)' : 'var(--border-subtle)'}`,
+        borderBottom: `1px solid ${selected ? 'var(--accent)' : 'var(--border-subtle)'}`,
         borderLeft: '2px solid var(--node-concept)',
         opacity: data.isDimmed ? 0.2 : 1,
       }}
@@ -307,7 +311,7 @@ export const nodeTypes = {
       typeLabel="Session"
       icon={Compass}
     >
-      <div className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-2">
+      <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] line-clamp-2 mb-2">
         {data.label}
       </div>
       <div className="text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">

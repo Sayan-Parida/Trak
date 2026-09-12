@@ -77,7 +77,7 @@ function ViewportFitter({ nodeCount, edgeCount }: { nodeCount: number; edgeCount
   useEffect(() => {
     if (!nodesInitialized || nodeCount === 0) return;
     const frame = requestAnimationFrame(() => {
-      fitView({ padding: 0.15, duration: 300 });
+      fitView({ padding: 0.05, duration: 300 });
     });
     return () => cancelAnimationFrame(frame);
   }, [nodeCount, edgeCount, nodesInitialized, fitView]);
@@ -167,7 +167,7 @@ function InnerMindMap({ sessionId }: Props) {
     const { nodes: newNodes, edges: newEdges } = getLayoutedElements(nodes, edges, nextDir);
     setNodes(newNodes);
     setEdges(newEdges);
-    setTimeout(() => fitView({ padding: 0.15, duration: 250 }), 50);
+    setTimeout(() => fitView({ padding: 0.05, duration: 250 }), 50);
   }, [layoutDirection, nodes, edges, setNodes, setEdges, fitView]);
 
   // Focus Mode
@@ -327,7 +327,7 @@ function InnerMindMap({ sessionId }: Props) {
           minZoom={0.5}
           maxZoom={2.5}
           fitView
-          fitViewOptions={{ padding: 0.15 }}
+          fitViewOptions={{ padding: 0.05 }}
           proOptions={{ hideAttribution: true }}
         >
           <ViewportFitter nodeCount={nodes.length} edgeCount={edges.length} />
@@ -369,8 +369,8 @@ function InnerMindMap({ sessionId }: Props) {
             zoom={zoomLevel}
             onZoomIn={() => zoomIn({ duration: 200 })}
             onZoomOut={() => zoomOut({ duration: 200 })}
-            onFitView={() => fitView({ padding: 0.15, duration: 250 })}
-            onResetView={() => fitView({ padding: 0.15, duration: 250 })}
+            onFitView={() => fitView({ padding: 0.05, duration: 250 })}
+            onResetView={() => fitView({ padding: 0.05, duration: 250 })}
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
             layoutDirection={layoutDirection}

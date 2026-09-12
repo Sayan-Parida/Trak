@@ -11,6 +11,11 @@ import { Session, SessionStatus } from '../types';
 import { apiClient } from '../api/client';
 import { researchStore } from '../api/researchStore';
 
+const formatArchiveDate = (value: string) => new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric'
+}).format(new Date(value));
+
 interface Props {
   selectedSessionId: string | null;
   onSelectSession: (id: string) => void;
@@ -250,9 +255,11 @@ export default function SessionList({
 
                 {/* Minimal Meta */}
                 <div className="flex items-center gap-2 pl-3 text-[11px] font-mono text-[var(--text-muted)]">
-                  <span>{session.entityCount} nodes</span>
+                  <span>{formatArchiveDate(session.startTime)}</span>
                   <span>•</span>
-                  <span>{session.pageCount} sources</span>
+                  <span>{session.pageCount} pages</span>
+                  <span>•</span>
+                  <span>{session.searchCount} searches</span>
                 </div>
               </div>
             );

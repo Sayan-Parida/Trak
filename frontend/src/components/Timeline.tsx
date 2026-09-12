@@ -80,15 +80,18 @@ export default function Timeline({ sessionId, onJumpToNode }: Props) {
   }
 
   return (
-    <div className="w-full h-full overflow-y-auto px-6 py-6 select-none">
-      <div className="max-w-2xl mx-auto space-y-4">
+    <div className="w-full h-full overflow-y-auto px-6 py-8 select-none lg:px-10">
+      <div className="max-w-3xl mx-auto space-y-6">
         {/* Header & Category Filters */}
         <div className="flex items-center justify-between gap-2 pb-3 border-b border-[var(--border-subtle)]">
-          <h2 className="text-xs font-semibold text-[var(--text-primary)]">
-            Research Timeline
-          </h2>
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--accent)]">Activity record</div>
+            <h2 className="mt-1 font-[var(--font-display)] text-xl text-[var(--text-primary)]">
+              Research Timeline
+            </h2>
+          </div>
 
-          <div className="flex items-center gap-1 text-[11px]">
+          <div className="flex items-center gap-1 text-xs">
             {[
               { key: 'ALL', label: 'All' },
               { key: 'SEARCH', label: 'Searches' },
@@ -100,7 +103,7 @@ export default function Timeline({ sessionId, onJumpToNode }: Props) {
                 onClick={() => setFilterType(f.key)}
                 className={`px-2 py-0.5 rounded transition-colors ${
                   filterType === f.key
-                    ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] font-semibold'
+                    ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] font-semibold border-b-2 border-[var(--accent)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
@@ -129,7 +132,7 @@ export default function Timeline({ sessionId, onJumpToNode }: Props) {
                   </div>
 
                   <div 
-                    className="p-3 rounded border transition-colors hover:border-[var(--border-medium)]"
+                    className="p-4 rounded-[var(--radius-sm)] border transition-colors hover:border-[var(--accent)] hover:bg-[var(--surface-hover)]"
                     style={{
                       backgroundColor: 'var(--surface-base)',
                       borderColor: 'var(--border-subtle)',
@@ -144,7 +147,7 @@ export default function Timeline({ sessionId, onJumpToNode }: Props) {
                       </time>
                     </div>
 
-                    <h3 className="text-xs font-semibold text-[var(--text-primary)] leading-tight mb-1">
+                    <h3 className="font-[var(--font-display)] text-base font-semibold text-[var(--text-primary)] leading-tight mb-1">
                       {entry.title}
                     </h3>
 

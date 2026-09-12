@@ -74,12 +74,13 @@ export default function PagesView({ sessionId }: Props) {
   }
 
   return (
-    <div className="w-full h-full overflow-y-auto px-6 py-6 select-none">
-      <div className="max-w-4xl mx-auto space-y-4">
+    <div className="w-full h-full overflow-y-auto px-6 py-8 select-none lg:px-10">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Header & Controls */}
         <div className="flex items-center justify-between gap-3 pb-3 border-b border-[var(--border-subtle)]">
           <div>
-            <h2 className="text-xs font-semibold text-[var(--text-primary)]">
+            <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--accent)]">Research library</div>
+            <h2 className="mt-1 font-[var(--font-display)] text-xl text-[var(--text-primary)]">
               Sources & Publications
             </h2>
           </div>
@@ -87,7 +88,7 @@ export default function PagesView({ sessionId }: Props) {
           <div className="flex items-center gap-2">
             {/* Search Input */}
             <div 
-              className="flex items-center gap-1.5 px-2 py-1 rounded border bg-[var(--surface-subtle)] text-xs"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-sm)] border bg-[var(--surface-subtle)] text-sm"
               style={{ borderColor: 'var(--border-subtle)' }}
             >
               <Search className="w-3 h-3 text-[var(--text-faint)] shrink-0" />
@@ -105,7 +106,7 @@ export default function PagesView({ sessionId }: Props) {
               <select
                 value={selectedDomain}
                 onChange={(e) => setSelectedDomain(e.target.value)}
-                className="px-2 py-1 rounded border bg-[var(--surface-subtle)] text-xs text-[var(--text-secondary)] focus:outline-none"
+                className="px-2.5 py-1.5 rounded-[var(--radius-sm)] border bg-[var(--surface-subtle)] text-sm text-[var(--text-secondary)] focus:outline-none"
                 style={{ borderColor: 'var(--border-subtle)' }}
               >
                 <option value="ALL">All Domains</option>
@@ -146,7 +147,7 @@ export default function PagesView({ sessionId }: Props) {
           </div>
         ) : viewMode === 'list' ? (
           /* Clean Table */
-          <div className="rounded border border-[var(--border-subtle)] overflow-hidden">
+          <div className="rounded-[var(--radius-sm)] border border-[var(--border-subtle)] overflow-hidden">
             <table className="w-full text-left text-xs">
               <thead className="border-b border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[10px] font-mono uppercase text-[var(--text-muted)]">
                 <tr>
@@ -163,7 +164,7 @@ export default function PagesView({ sessionId }: Props) {
                     onClick={() => setActiveReaderPage(page)}
                     className="hover:bg-[var(--surface-hover)] cursor-pointer transition-colors"
                   >
-                    <td className="py-2 px-3 font-medium text-[var(--text-primary)] max-w-sm truncate">
+                    <td className="py-3 px-4 font-[var(--font-display)] text-sm font-medium text-[var(--text-primary)] max-w-sm truncate">
                       {page.title}
                     </td>
                     <td className="py-2 px-3 font-mono text-[11px] text-[var(--text-muted)]">

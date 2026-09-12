@@ -2,7 +2,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { 
   Plus, 
   Compass, 
-  ArrowRight
+  ArrowRight,
+  CalendarDays,
+  Clock3,
+  Search,
+  BookOpen,
+  Globe2,
+  MapPinned
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import SessionList from './components/SessionList';
@@ -15,6 +21,21 @@ import ShortcutsModal from './components/ShortcutsModal';
 import { Theme, Session } from './types';
 import { apiClient } from './api/client';
 import { researchStore } from './api/researchStore';
+
+const formatSessionDate = (value: string) => new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric'
+}).format(new Date(value));
+
+const formatSessionDuration = (startTime: string, endTime: string | null) => {
+  if (!endTime) return 'In progress';
+  const minutes = Math.max(1, Math.round((new Date(endTime).getTime() - new Date(startTime).getTime()) / 60000));
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+};
 
 export default function App() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -89,7 +110,7 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
       />
 
       {/* Main App Workspace Shell */}
-      <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <main className="relative flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Compact Desktop Top Bar */}
         <Navbar
           activeSession={activeSession}
@@ -123,6 +144,40 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
               />
             </div>
           </div>
+        )}
+
+        {activeSession && (
+          <section className="shrink-0 border-b border-[var(--border-subtle)] bg-[var(--surface-base)] px-6 py-6 lg:px-8">
+            <div className="mx-auto flex max-w-[1500px] items-end justify-between gap-6">
+              <div className="min-w-0">
+                <div className="mb-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--accent)]">
+                  <MapPinned className="h-3.5 w-3.5" />
+                  <span>Research session</span>
+                  <span className="h-1 w-1 rounded-full bg-[var(--status-active)]" />
+                  <span className="text-[var(--text-muted)]">{activeSession.status.toLowerCase()}</span>
+                </div>
+                <h1 style={{ fontFamily: 'var(--font-display)' }} className="max-w-4xl truncate text-3xl leading-[0.98] tracking-[-0.025em] text-[var(--text-primary)] sm:text-4xl">
+                  {activeSession.title}
+                </h1>
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] font-mono text-[var(--text-muted)]">
+                  <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3 w-3 text-[var(--node-page)]" />{formatSessionDate(activeSession.startTime)}</span>
+                  <span className="inline-flex items-center gap-1.5"><Clock3 className="h-3 w-3 text-[var(--node-concept)]" />{formatSessionDuration(activeSession.startTime, activeSession.endTime)}</span>
+                  <span className="inline-flex items-center gap-1.5"><Search className="h-3 w-3 text-[var(--node-search)]" />{activeSession.searchCount} searches</span>
+                  <span className="inline-flex items-center gap-1.5"><BookOpen className="h-3 w-3 text-[var(--node-paper)]" />{activeSession.pageCount} pages</span>
+                  <span className="inline-flex items-center gap-1.5"><Globe2 className="h-3 w-3 text-[var(--text-secondary)]" />{activeSession.entityCount} entities</span>
+                </div>
+              </div>
+              <div className="hidden max-w-52 shrink-0 border-l border-[var(--border-subtle)] pl-5 text-right lg:block">
+                <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-faint)]">Last known activity</div>
+                <div className="mt-1 text-sm font-medium text-[var(--text-primary)]">
+                  {activeSession.endTime ? formatSessionDate(activeSession.endTime) : 'Research in progress'}
+                </div>
+                <div className="mt-1 text-[11px] text-[var(--text-muted)]">
+                  {activeSession.endTime ? 'Session stopped here' : 'Trail is still active'}
+                </div>
+              </div>
+            </div>
+          </section>
         )}
 
         {/* Hero Canvas Area */}

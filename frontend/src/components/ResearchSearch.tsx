@@ -82,7 +82,7 @@ export default function ResearchSearch({ activeSessionId, onOpenSession, onFocus
     <div ref={containerRef} className="relative z-20">
       <form onSubmit={onSubmit} className="relative flex items-center">
         <div 
-          className="flex items-center gap-2 px-2.5 h-8 rounded border transition-colors w-full sm:w-80 md:w-96"
+          className="flex items-center gap-2 px-3 h-9 rounded-[var(--radius-sm)] border transition-colors w-full sm:w-80 md:w-96"
           style={{
             backgroundColor: 'var(--surface-subtle)',
             borderColor: loading ? 'var(--border-focus)' : 'var(--border-subtle)',
@@ -104,7 +104,7 @@ export default function ResearchSearch({ activeSessionId, onOpenSession, onFocus
             }}
             onFocus={() => setShowDropdown(true)}
             placeholder="Search literature, topics or synthesize..."
-            className="flex-1 min-w-0 bg-transparent text-xs text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none"
+            className="flex-1 min-w-0 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none"
           />
 
           {query && !loading && (
@@ -120,7 +120,7 @@ export default function ResearchSearch({ activeSessionId, onOpenSession, onFocus
           <button
             type="submit"
             disabled={loading || !query.trim()}
-            className="px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--surface-selected)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:cursor-not-allowed"
+            className="px-2.5 py-1 rounded-[var(--radius-xs)] text-xs font-medium bg-[var(--surface-selected)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:cursor-not-allowed"
           >
             {loading ? '...' : 'Run'}
           </button>
@@ -137,7 +137,7 @@ export default function ResearchSearch({ activeSessionId, onOpenSession, onFocus
       {/* Suggestions / Results Dropdown */}
       {showDropdown && !loading && (
         <div 
-          className="absolute left-0 top-full mt-1 w-full sm:w-96 rounded-lg border p-1 z-30 shadow-md text-xs"
+          className="absolute left-0 top-full mt-2 w-full sm:w-96 rounded-[var(--radius-md)] border p-1.5 z-30 shadow-panel text-sm"
           style={{
             backgroundColor: 'var(--surface-elevated)',
             borderColor: 'var(--border-medium)',
