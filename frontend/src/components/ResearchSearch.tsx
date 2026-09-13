@@ -183,7 +183,7 @@ export default function ResearchSearch({ activeSessionId, onOpenSession, onFocus
 
               {data.results.length === 0 ? (
                 <div className="py-4 text-center text-[var(--text-muted)] text-xs">
-                  No matching entities found.
+                  No matching results found.
                 </div>
               ) : (
                 data.results.map((res) => (

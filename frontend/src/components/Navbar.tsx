@@ -10,8 +10,7 @@ import {
   Plus, 
   Settings, 
   Search,
-  Check,
-  Compass
+  Check
 } from 'lucide-react';
 import { Theme, Session } from '../types';
 
@@ -51,126 +50,126 @@ export default function Navbar({
 
   return (
     <header 
-      className="flex items-center justify-between px-4 h-12 border-b z-30 select-none shrink-0"
+      className="flex items-center justify-between gap-4 px-4 h-14 border-b-2 z-30 select-none shrink-0"
       style={{
         backgroundColor: 'var(--surface-base)',
-        borderColor: 'var(--border-subtle)',
+        borderColor: 'var(--border-strong)',
       }}
     >
       {/* Left: Brand & Session Breadcrumb */}
-      <div className="flex items-center gap-2 min-w-0">
-        <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
           <div 
-            className="w-6 h-6 rounded-[var(--radius-xs)] flex items-center justify-center text-[var(--surface-base)]"
-            style={{ backgroundColor: 'var(--accent)' }}
+            className="relative w-7 h-7 flex items-center justify-center text-[var(--surface-base)]"
+            style={{ backgroundColor: 'var(--border-strong)' }}
           >
-            <Compass className="w-3 h-3" />
+            <span className="font-display text-sm font-bold leading-none">{'P'}</span>
+            <span 
+              className="absolute -top-[3px] -right-[3px] w-2 h-2"
+              style={{ backgroundColor: 'var(--accent)' }}
+            />
           </div>
-          <span className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
+          <span className="font-display text-base font-bold tracking-tight leading-none text-[var(--text-primary)]">
             Pariet
+          </span>
+          <span className="hidden md:inline-flex font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-faint)] border-[1.5px] border-[var(--border-medium)] px-1 py-0.5 rounded-[var(--radius-xs)]">
+            ResearchLab
           </span>
         </div>
 
         {activeSession && (
           <>
-            <span className="text-[var(--text-faint)] text-xs">/</span>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-[13px] text-[var(--text-secondary)] font-medium truncate max-w-[200px] sm:max-w-[280px]">
+            <span className="text-[var(--text-faint)] font-bold text-lg leading-none select-none">/</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="font-mono text-[11px] text-[var(--text-muted)] uppercase tracking-[0.06em] hidden lg:inline">
+                SESSION
+              </span>
+              <span className="text-[13px] text-[var(--text-secondary)] font-semibold truncate max-w-[140px] sm:max-w-[220px]">
                 {activeSession.title}
               </span>
               <span 
-                className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ backgroundColor: activeSession.status === 'ACTIVE' ? 'var(--status-active)' : 'var(--status-muted)' }}
+                className={`b-live shrink-0 ${activeSession.status === 'ACTIVE' ? 'b-live--on' : ''}`}
               />
             </div>
           </>
         )}
       </div>
 
-      {/* Center: Clean View Tabs */}
+      {/* Center: View Tabs — three separate brutal boxes */}
       {activeSession && (
-        <nav className="flex items-center gap-1 border border-[var(--border-subtle)] rounded-[var(--radius-sm)] p-1 bg-[var(--surface-subtle)]">
+        <nav className="flex items-center gap-3">
           <button
             onClick={() => onChangeTab('mindmap')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-xs)] text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-[var(--radius-xs)] text-sm font-semibold border-2 transition-all ${
               activeTab === 'mindmap'
-                ? 'bg-[var(--surface-base)] text-[var(--text-primary)] font-semibold shadow-[var(--shadow-xs)] border-b-2 border-[var(--accent)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
+                ? 'bg-[var(--accent-yellow)] text-[var(--ink)] border-[var(--border-strong)] shadow-[3px_3px_0_var(--shadow-ink)]'
+                : 'bg-[var(--surface-base)] text-[var(--text-muted)] border-[var(--border-medium)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:shadow-[2px_2px_0_var(--shadow-ink)] hover:-translate-x-[1px] hover:-translate-y-[1px]'
             }`}
           >
-            <Network className="w-3.5 h-3.5 opacity-70" />
+            <Network className="w-3.5 h-3.5" />
             <span>Research Map</span>
           </button>
 
           <button
             onClick={() => onChangeTab('timeline')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-xs)] text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-[var(--radius-xs)] text-sm font-semibold border-2 transition-all ${
               activeTab === 'timeline'
-                ? 'bg-[var(--surface-base)] text-[var(--text-primary)] font-semibold shadow-[var(--shadow-xs)] border-b-2 border-[var(--accent)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
+                ? 'bg-[var(--accent-yellow)] text-[var(--ink)] border-[var(--border-strong)] shadow-[3px_3px_0_var(--shadow-ink)]'
+                : 'bg-[var(--surface-base)] text-[var(--text-muted)] border-[var(--border-medium)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:shadow-[2px_2px_0_var(--shadow-ink)] hover:-translate-x-[1px] hover:-translate-y-[1px]'
             }`}
           >
-            <Clock className="w-3.5 h-3.5 opacity-70" />
+            <Clock className="w-3.5 h-3.5" />
             <span>Timeline</span>
           </button>
 
           <button
             onClick={() => onChangeTab('pages')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-xs)] text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-[var(--radius-xs)] text-sm font-semibold border-2 transition-all ${
               activeTab === 'pages'
-                ? 'bg-[var(--surface-base)] text-[var(--text-primary)] font-semibold shadow-[var(--shadow-xs)] border-b-2 border-[var(--accent)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
+                ? 'bg-[var(--accent-yellow)] text-[var(--ink)] border-[var(--border-strong)] shadow-[3px_3px_0_var(--shadow-ink)]'
+                : 'bg-[var(--surface-base)] text-[var(--text-muted)] border-[var(--border-medium)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:shadow-[2px_2px_0_var(--shadow-ink)] hover:-translate-x-[1px] hover:-translate-y-[1px]'
             }`}
           >
-            <BookOpen className="w-3.5 h-3.5 opacity-70" />
+            <BookOpen className="w-3.5 h-3.5" />
             <span>Sources ({activeSession.pageCount})</span>
           </button>
         </nav>
       )}
 
-      {/* Right: Quick Search Button & Settings Menu */}
+      {/* Right: Command, New, Settings */}
       <div className="flex items-center gap-1.5">
         <button
           onClick={onFocusSearch}
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-sm)] text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] border border-[var(--border-subtle)] transition-colors"
+          className="b-btn text-xs"
           title={`Search or research (${shortcutLabel('K')})`}
         >
           <Search className="w-3 h-3" />
           <span className="hidden sm:inline text-[11px]">Command</span>
-          <kbd className="font-mono text-[10px] text-[var(--text-faint)] bg-[var(--surface-subtle)] px-1 rounded">{shortcutLabel('K')}</kbd>
+          <kbd className="font-mono text-[10px] font-bold text-[var(--text-muted)] bg-[var(--surface-subtle)] border border-[var(--border-medium)] px-1 rounded-[var(--radius-xs)]">{shortcutLabel('K')}</kbd>
         </button>
 
         <button
           onClick={onOpenNewSession}
-          className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+          className="b-btn b-btn--accent text-xs"
           title="New Workspace"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline text-[11px]">New</span>
         </button>
 
         {/* Settings & Appearance Dropdown */}
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-            className={`p-1 rounded transition-colors ${
-              showSettingsMenu
-                ? 'bg-[var(--surface-selected)] text-[var(--text-primary)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
-            }`}
+            className={`b-btn b-btn--square ${showSettingsMenu ? 'bg-[var(--surface-selected)]' : ''}`}
             title="Settings & Appearance"
           >
             <Settings className="w-4 h-4" />
           </button>
 
           {showSettingsMenu && (
-            <div 
-              className="absolute right-0 mt-2 w-48 rounded-[var(--radius-md)] p-1.5 z-40 border text-xs shadow-panel"
-              style={{
-                backgroundColor: 'var(--surface-elevated)',
-                borderColor: 'var(--border-medium)',
-              }}
-            >
-              <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)] font-semibold">
+            <div className="b-panel absolute right-0 mt-2 w-48 p-1.5 z-40 text-xs">
+              <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)] font-bold border-b-2 border-[var(--border-subtle)] mb-1">
                 Appearance
               </div>
 
@@ -207,14 +206,14 @@ export default function Navbar({
                 {theme === 'system' && <Check className="w-3.5 h-3.5 text-[var(--accent)]" />}
               </button>
 
-              <div className="my-1 border-t border-[var(--border-subtle)]" />
+              <div className="my-1 border-t-2 border-[var(--border-subtle)]" />
 
               <button
                 onClick={() => { onOpenShortcuts(); setShowSettingsMenu(false); }}
                 className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] text-left text-[var(--text-secondary)]"
               >
                 <span>Shortcuts Guide</span>
-                <kbd className="font-mono text-[10px] text-[var(--text-faint)]">?</kbd>
+                <kbd className="font-mono text-[10px] font-bold text-[var(--text-faint)] border border-[var(--border-medium)] px-1.5 rounded-[var(--radius-xs)]">?</kbd>
               </button>
             </div>
           )}

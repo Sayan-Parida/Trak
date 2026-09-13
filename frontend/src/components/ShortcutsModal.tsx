@@ -10,8 +10,7 @@ const getShortcuts = () => [
   { key: shortcutLabel('B'), description: 'Toggle left workspace sidebar' },
   { key: 'F', description: 'Fit research graph to screen' },
   { key: 'Space + Drag', description: 'Pan knowledge graph canvas' },
-  { key: 'Scroll Wheel', description: 'Zoom in / zoom out' },
-  { key: 'Esc', description: 'Close active drawer or modal' }
+  { key: 'Scroll Wheel', description: 'Zoom in / zoom out' }
 ];
 
 export default function ShortcutsModal({ onClose }: Props) {

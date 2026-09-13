@@ -1,179 +1,216 @@
 @import "tailwindcss";
 
+@theme {
+  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
+}
+
 /* -------------------------------------------------------------
-   RESEARCHMIND DESIGN SYSTEM
-   Principles: Calm, Restrained, Precise, Desktop-First
+   PARIET DESIGN SYSTEM
+   Mode: Neo-brutalist research instrument.
+   Palette: hot pink (primary), sunshine yellow (secondary),
+   mint green (accent), orange (highlight),
+   near-black ink (text/borders), subtle warm paper (light mode),
+   neutral charcoal (dark mode).
+   The light and dark themes share ONE accent identity; dark mode
+   is simply the design system inverted onto a neutral base.
    ------------------------------------------------------------- */
 
 :root {
   /* Typography Scale */
-  --font-sans: "Aptos", "Segoe UI", sans-serif;
-  --font-display: "Georgia", "Times New Roman", serif;
-  --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  --font-sans: "Space Grotesk", "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
 
-  /* LIGHT THEME (Warm/Neutral White, Soft Gray Borders, Deep Calm Text) */
-  --bg-app: #e9e7e1;
-  --surface-base: #f8f7f2;
-  --surface-elevated: #fffefa;
-  --surface-subtle: #eeece6;
-  --surface-hover: #e4e1d9;
-  --surface-selected: #d9e4e1;
-  --surface-overlay: rgba(248, 247, 242, 0.97);
+  /* LIGHT THEME (Subtle warm paper, white surfaces, near-black ink) */
+  --ink: #14140f;
+  --shadow-ink: rgba(20, 20, 15, 1);
 
-  --border-subtle: #d5d2c9;
-  --border-medium: #b8b4a9;
-  --border-strong: #78756d;
-  --border-focus: #147d88;
+  --bg-app: #f4f3ef;
+  --surface-base: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-subtle: #ebeae3;
+  --surface-hover: #efeee8;
+  --surface-selected: #ffe2ef;
 
-  --text-primary: #202522;
-  --text-secondary: #4d5753;
-  --text-muted: #737a74;
-  --text-faint: #9b9f98;
+  --border-subtle: #dbd8d0;
+  --border-medium: #a8a6a0;
+  --border-strong: #14140f;
+  --border-focus: #14140f;
 
-  /* Restrained Accents */
-  --accent: #147d88;
-  --accent-hover: #0d626b;
-  --accent-subtle: #dceceb;
+  --text-primary: #14140f;
+  --text-secondary: #46463f;
+  --text-muted: #77776e;
+  --text-faint: #a2a098;
 
-  --status-active: #2d8064;
-  --status-active-subtle: #e0eee7;
-  --status-muted: #6b7280;
-  --status-warning: #b66a32;
-  --status-danger: #b64b43;
+  /* Palette accents */
+  --accent: #ff3d8e;             /* hot pink — primary */
+  --accent-hover: #e02278;
+  --accent-subtle: #ffdff0;
+  --accent-warm: #ff8a00;        /* orange — highlight */
+  --accent-warm-subtle: #ffe9cf;
+  --accent-yellow: #ffd21e;      /* sunshine yellow — secondary */
+  --accent-yellow-subtle: #fff3c4;
+
+  --status-active: #16c587;      /* mint green — accent */
+  --status-active-subtle: #d5f6e7;
+  --status-muted: #77776e;
+  --status-warning: #ff8a00;
+  --status-danger: #ff2444;
 
   /* Graph Canvas */
-  --graph-bg: #e9e7e1;
-  --graph-dot: #d4d1c8;
-  --graph-edge: #b8b5ad;
-  --graph-edge-highlight: #596762;
+  --graph-bg: #f4f3ef;
+  --graph-dot: #d5d3cb;
+  --graph-edge: #9a9a94;
+  --graph-edge-highlight: #14140f;
 
-  /* Node Accents (Subtle, Muted) */
-  --node-paper: #147d88;
-  --node-paper-bg: #dceceb;
-  --node-page: #536b9c;
-  --node-page-bg: #e2e7f0;
-  --node-concept: #8b5e3c;
-  --node-concept-bg: #efe3d7;
-  --node-search: #b66a32;
-  --node-search-bg: #f2e4d6;
-  --node-insight: #2d8064;
-  --node-insight-bg: #e0eee7;
+  /* Node Types */
+  --node-session: #d2266e;
+  --node-session-bg: #ffe0ee;
+  --node-search: #ea6f00;
+  --node-search-bg: #ffe9cd;
+  --node-page: #a06a00;
+  --node-page-bg: #fff3c4;
+  --node-paper: #089b66;
+  --node-paper-bg: #d3f5e5;
+  --node-concept: #c04013;
+  --node-concept-bg: #fbe0cf;
+  --node-insight: #14140f;
+  --node-insight-bg: #eceae3;
+  --node-domain: #8b8980;
 
-  /* Shadows (Restrained, crisp) */
-  --shadow-xs: 0 1px 2px rgba(36, 42, 38, 0.06);
-  --shadow-sm: 0 2px 5px rgba(36, 42, 38, 0.09);
-  --shadow-md: 0 5px 14px rgba(36, 42, 38, 0.11), 0 0 0 1px var(--border-subtle);
-  --shadow-panel: 0 12px 28px rgba(36, 42, 38, 0.16), 0 0 0 1px var(--border-subtle);
+  /* Hard offset shadows (no blur) */
+  --shadow-xs: 2px 2px 0 var(--shadow-ink);
+  --shadow-sm: 3px 3px 0 var(--shadow-ink);
+  --shadow-md: 4px 4px 0 var(--shadow-ink);
+  --shadow-panel: 6px 6px 0 var(--shadow-ink);
 
-  /* Radius Scale */
-  --radius-xs: 2px;
-  --radius-sm: 3px;
-  --radius-md: 5px;
-  --radius-lg: 7px;
+  /* Radius Scale (near-sharp geometry) */
+  --radius-xs: 1px;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
 }
 
-/* DARK THEME (Deep Charcoal, Soft Off-White Text, Subtle Borders) */
+/* DARK THEME (Neutral charcoal base, inverted light-mode identity) */
 :root[data-theme="dark"] {
-  --bg-app: #0e1112;
-  --surface-base: #151a1b;
-  --surface-elevated: #1b2223;
-  --surface-subtle: #192021;
-  --surface-hover: #232b2c;
-  --surface-selected: #263b3c;
-  --surface-overlay: rgba(21, 26, 27, 0.97);
+  --ink: #1a1a18;
+  --shadow-ink: rgba(0, 0, 0, 0.85);
 
-  --border-subtle: #293334;
-  --border-medium: #3a4747;
-  --border-strong: #62706d;
-  --border-focus: #4eb4b0;
+  --bg-app: #111111;
+  --surface-base: #181818;
+  --surface-elevated: #202020;
+  --surface-subtle: #141414;
+  --surface-hover: #262626;
+  --surface-selected: #3a1b2c;
 
-  --text-primary: #eef0e9;
-  --text-secondary: #a9b3ad;
-  --text-muted: #7d8982;
-  --text-faint: #56615d;
+  --border-subtle: #2e2e2e;
+  --border-medium: #4a4a48;
+  --border-strong: #e6e6e6;
+  --border-focus: #e6e6e6;
 
-  --accent: #4eb4b0;
-  --accent-hover: #79cfca;
-  --accent-subtle: #183437;
+  --text-primary: #f5f5f0;
+  --text-secondary: #c4c4be;
+  --text-muted: #a8a8a0;
+  --text-faint: #6c6c68;
 
-  --status-active: #61b897;
-  --status-active-subtle: #173b31;
-  --status-muted: #6b7280;
-  --status-warning: #d49a63;
-  --status-danger: #df766c;
+  --accent: #ff5ca8;
+  --accent-hover: #ff79bc;
+  --accent-subtle: #3c1a2c;
+  --accent-warm: #ff9a3c;
+  --accent-warm-subtle: #35240f;
+  --accent-yellow: #ffd93a;
+  --accent-yellow-subtle: #38300a;
 
-  --graph-bg: #0e1112;
-  --graph-dot: #202a2a;
-  --graph-edge: #3a4847;
-  --graph-edge-highlight: #9eaea7;
+  --status-active: #2fe0a0;
+  --status-active-subtle: #0f3326;
+  --status-muted: #a8a8a0;
+  --status-warning: #ff9a3c;
+  --status-danger: #ff5a6b;
 
-  --node-paper: #4eb4b0;
-  --node-paper-bg: #173b3c;
-  --node-page: #91a9d6;
-  --node-page-bg: #202c42;
-  --node-concept: #c3956e;
-  --node-concept-bg: #3d2c21;
-  --node-search: #d49a63;
-  --node-search-bg: #3c2b1d;
-  --node-insight: #61b897;
-  --node-insight-bg: #173b31;
+  --graph-bg: #111111;
+  --graph-dot: #2c2c2a;
+  --graph-edge: #555550;
+  --graph-edge-highlight: #f0f0ec;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-subtle);
-  --shadow-panel: 0 8px 28px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-medium);
+  --node-session: #ff6cb4;
+  --node-session-bg: #3a1530;
+  --node-search: #ffa650;
+  --node-search-bg: #38240a;
+  --node-page: #ffe06b;
+  --node-page-bg: #332b0a;
+  --node-paper: #3ce0a8;
+  --node-paper-bg: #0f2e24;
+  --node-concept: #ff8b55;
+  --node-concept-bg: #331f0e;
+  --node-insight: #f0f0ec;
+  --node-insight-bg: #2c2c29;
+  --node-domain: #8a8a86;
+
+  --shadow-xs: 2px 2px 0 var(--shadow-ink);
+  --shadow-sm: 3px 3px 0 var(--shadow-ink);
+  --shadow-md: 4px 4px 0 var(--shadow-ink);
+  --shadow-panel: 6px 6px 0 var(--shadow-ink);
 }
 
 @media (prefers-color-scheme: dark) {
   :root[data-theme="system"] {
-    --bg-app: #101216;
-    --surface-base: #16181d;
-    --surface-elevated: #1c1f26;
-    --surface-subtle: #1a1d23;
-    --surface-hover: #222630;
-    --surface-selected: #282d38;
-    --surface-overlay: rgba(22, 24, 29, 0.96);
+    --ink: #1a1a18;
+    --shadow-ink: rgba(0, 0, 0, 0.85);
 
-    --border-subtle: #262a33;
-    --border-medium: #343a46;
-    --border-strong: #4b5563;
-    --border-focus: #3b82f6;
+    --bg-app: #111111;
+    --surface-base: #181818;
+    --surface-elevated: #202020;
+    --surface-subtle: #141414;
+    --surface-hover: #262626;
+    --surface-selected: #3a1b2c;
 
-    --text-primary: #f3f4f6;
-    --text-secondary: #9ca3af;
-    --text-muted: #6b7280;
-    --text-faint: #4b5563;
+    --border-subtle: #2e2e2e;
+    --border-medium: #4a4a48;
+    --border-strong: #e6e6e6;
+    --border-focus: #e6e6e6;
 
-    --accent: #3b82f6;
-    --accent-hover: #60a5fa;
-    --accent-subtle: #1e293b;
+    --text-primary: #f5f5f0;
+    --text-secondary: #c4c4be;
+    --text-muted: #a8a8a0;
+    --text-faint: #6c6c68;
 
-    --status-active: #10b981;
-    --status-active-subtle: #064e3b;
-    --status-muted: #6b7280;
-    --status-warning: #f59e0b;
-    --status-danger: #ef4444;
+    --accent: #ff5ca8;
+    --accent-hover: #ff79bc;
+    --accent-subtle: #3c1a2c;
+    --accent-warm: #ff9a3c;
+    --accent-warm-subtle: #35240f;
+    --accent-yellow: #ffd93a;
+    --accent-yellow-subtle: #38300a;
 
-    --graph-bg: #101216;
-    --graph-dot: #1f232b;
-    --graph-edge: #2d333f;
-    --graph-edge-highlight: #9ca3af;
+    --status-active: #2fe0a0;
+    --status-active-subtle: #0f3326;
+    --status-muted: #a8a8a0;
+    --status-warning: #ff9a3c;
+    --status-danger: #ff5a6b;
 
-    --node-paper: #2dd4bf;
-    --node-paper-bg: #132e2b;
-    --node-page: #818cf8;
-    --node-page-bg: #1e1b4b;
-    --node-concept: #a78bfa;
-    --node-concept-bg: #2e1065;
-    --node-search: #fbbf24;
-    --node-search-bg: #451a03;
-    --node-insight: #34d399;
-    --node-insight-bg: #064e3b;
+    --graph-bg: #111111;
+    --graph-dot: #2c2c2a;
+    --graph-edge: #555550;
+    --graph-edge-highlight: #f0f0ec;
 
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
-    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-subtle);
-    --shadow-panel: 0 8px 28px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-medium);
+    --node-session: #ff6cb4;
+    --node-session-bg: #3a1530;
+    --node-search: #ffa650;
+    --node-search-bg: #38240a;
+    --node-page: #ffe06b;
+    --node-page-bg: #332b0a;
+    --node-paper: #3ce0a8;
+    --node-paper-bg: #0f2e24;
+    --node-concept: #ff8b55;
+    --node-concept-bg: #331f0e;
+    --node-insight: #f0f0ec;
+    --node-insight-bg: #2c2c29;
+    --node-domain: #8a8a86;
+
+    --shadow-xs: 2px 2px 0 var(--shadow-ink);
+    --shadow-sm: 3px 3px 0 var(--shadow-ink);
+    --shadow-md: 4px 4px 0 var(--shadow-ink);
+    --shadow-panel: 6px 6px 0 var(--shadow-ink);
   }
 }
 
@@ -220,24 +257,257 @@ button {
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border-medium);
-  border-radius: 9999px;
+  border-radius: 0;
+  border: 2px solid var(--surface-base);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--border-strong);
 }
 
 /* Focus States */
 :focus-visible {
-  outline: 1.5px solid var(--border-focus);
+  outline: 2px solid var(--border-focus);
   outline-offset: 1px;
+}
+
+/* -------------------------------------------------------------
+   NEO-BRUTAL COMPONENT PRIMITIVES
+   ------------------------------------------------------------- */
+
+/* Heavy rule (ink bar) */
+.b-line {
+  height: 2px;
+  background: var(--border-strong);
+}
+
+/* Diagonal hazard stripes */
+.stripes {
+  background: repeating-linear-gradient(-45deg, var(--ink) 0 7px, transparent 7px 14px);
+}
+.stripes-warm {
+  background: repeating-linear-gradient(-45deg, var(--accent-warm) 0 7px, transparent 7px 14px);
+}
+.stripes-accent {
+  background: repeating-linear-gradient(-45deg, var(--accent) 0 7px, transparent 7px 14px);
+}
+.stripes-yellow {
+  background: repeating-linear-gradient(-45deg, var(--accent-yellow) 0 7px, transparent 7px 14px);
+}
+
+/* Live / status square */
+.b-live {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  background: var(--status-muted);
+}
+.b-live--on {
+  background: var(--status-active);
+  animation: pariet-blink 1s steps(2, start) infinite;
+}
+@keyframes pariet-blink {
+  50% { opacity: 0.15; }
+}
+
+/* Brutal button */
+.b-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 2px solid var(--border-strong);
+  background: var(--surface-base);
+  color: var(--text-primary);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  box-shadow: 3px 3px 0 var(--shadow-ink);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.12s ease;
+}
+.b-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--shadow-ink);
+}
+.b-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--shadow-ink);
+}
+.b-btn--square {
+  padding: 5px;
+}
+.b-btn--solid {
+  background: var(--border-strong);
+  color: var(--surface-base);
+}
+.b-btn--accent {
+  background: var(--accent);
+  border-color: var(--border-strong);
+  color: var(--surface-base);
+}
+.b-btn--accent:hover {
+  background: var(--accent-hover);
+}
+.b-btn--warm {
+  background: var(--accent-warm);
+  border-color: var(--border-strong);
+  color: var(--ink);
+}
+.b-btn--warn:hover {
+  background: var(--status-danger);
+  color: var(--surface-base);
+}
+.b-btn--mint {
+  background: var(--status-active);
+  border-color: var(--border-strong);
+  color: var(--ink);
+}
+.b-btn--mint:hover {
+  background: var(--status-active-subtle);
+}
+
+/* Brutal input */
+.b-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 2px solid var(--border-medium);
+  background: var(--surface-elevated);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  transition: border-color 0.1s ease, box-shadow 0.1s ease;
+}
+.b-input:focus-within {
+  border-color: var(--border-strong);
+  box-shadow: 3px 3px 0 var(--shadow-ink);
+}
+.b-input input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+.b-input input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Segmented control */
+.b-seg {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 6px;
+  border-radius: var(--radius-xs);
+  border: 2px solid transparent;
+  transition: color 0.1s ease, background 0.1s ease;
+}
+.b-seg:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+.b-seg--on {
+  color: var(--ink);
+  background: var(--accent-yellow);
+  border-color: var(--border-strong);
+  box-shadow: 2px 2px 0 var(--shadow-ink);
+}
+
+/* Micro tag */
+.b-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  background: var(--surface-base);
+}
+.b-tag--solid {
+  background: var(--border-strong);
+  color: var(--surface-base);
+  border-color: var(--border-strong);
+}
+.b-tag--accent {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.b-tag--mint {
+  background: var(--status-active-subtle);
+  border-color: var(--status-active);
+  color: var(--status-active);
+}
+.b-tag--warm {
+  background: var(--accent-warm-subtle);
+  border-color: var(--accent-warm);
+  color: var(--accent-warm);
+}
+
+/* Number stamp */
+.b-stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+}
+.b-stamp--on {
+  background: var(--accent);
+  border-color: var(--border-strong);
+  color: var(--surface-base);
+}
+
+/* Brutal panel surface */
+.b-panel {
+  background: var(--surface-base);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+/* --- View switch transition (fade + small rise) ------------------ */
+@keyframes pariet-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.view-enter {
+  animation: pariet-view-in 190ms ease-out both;
+}
+.view-enter--slow {
+  animation-duration: 220ms;
 }
 
 /* -------------------------------------------------------------
@@ -250,7 +520,7 @@ button {
 
 .react-flow__background-pattern line {
   stroke: var(--graph-dot) !important;
-  stroke-width: 1.15px !important;
+  stroke-width: 1.4px !important;
 }
 
 .react-flow__pane {
@@ -262,7 +532,7 @@ button {
 }
 
 .react-flow__controls {
-  border: 1px solid var(--border-subtle) !important;
+  border: 2px solid var(--border-strong) !important;
   border-radius: var(--radius-sm) !important;
   background: var(--surface-base) !important;
   box-shadow: var(--shadow-sm) !important;
@@ -270,29 +540,33 @@ button {
 }
 
 .react-flow__controls-button svg {
-  max-width: 12px !important;
-  max-height: 12px !important;
+  max-width: 13px !important;
+  max-height: 13px !important;
 }
 
 .react-flow__controls-button {
   background: transparent !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
+  border-bottom: 2px solid var(--border-subtle) !important;
   color: var(--text-secondary) !important;
   fill: var(--text-secondary) !important;
-  width: 30px !important;
-  height: 30px !important;
-  transition: background 0.15s ease, color 0.15s ease !important;
+  width: 32px !important;
+  height: 32px !important;
+  transition: background 0.12s ease, color 0.12s ease !important;
 }
 
 .react-flow__controls-button:hover {
-  background: var(--surface-hover) !important;
+  background: var(--surface-selected) !important;
   color: var(--text-primary) !important;
   fill: var(--text-primary) !important;
 }
 
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
 .react-flow__minimap {
-  border: 1px solid var(--border-subtle) !important;
-  border-radius: var(--radius-md) !important;
+  border: 2px solid var(--border-strong) !important;
+  border-radius: var(--radius-sm) !important;
   background: var(--surface-base) !important;
   box-shadow: var(--shadow-md) !important;
   overflow: hidden !important;
@@ -302,31 +576,31 @@ button {
   margin: 0 !important;
 }
 
-/* Smooth Edge Strokes */
+/* Edge Strokes */
 .react-flow__edge-path {
   stroke: var(--graph-edge) !important;
-  stroke-width: 1.25px !important;
-  transition: stroke 0.15s ease, stroke-width 0.15s ease !important;
+  stroke-width: 1.4px !important;
+  transition: stroke 0.12s ease, stroke-width 0.12s ease !important;
 }
 
 .react-flow__edge.selected .react-flow__edge-path,
 .react-flow__edge:hover .react-flow__edge-path {
   stroke: var(--graph-edge-highlight) !important;
-  stroke-width: 1.75px !important;
+  stroke-width: 2px !important;
 }
 
 .react-flow__edge-textbg {
   fill: var(--surface-base) !important;
-  rx: 3px !important;
-  ry: 3px !important;
-  stroke: var(--border-subtle) !important;
+  rx: 0 !important;
+  ry: 0 !important;
+  stroke: var(--border-medium) !important;
   stroke-width: 1px !important;
 }
 
 .react-flow__edge-text {
   fill: var(--text-muted) !important;
   font-size: 10px !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   font-family: var(--font-mono) !important;
   letter-spacing: 0.02em !important;
 }

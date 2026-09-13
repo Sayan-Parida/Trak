@@ -22,7 +22,7 @@ import { apiClient } from '../api/client';
 import { researchStore } from '../api/researchStore';
 import { nodeTypes } from './CustomNodes';
 import NodeDetailPanel from './NodeDetailPanel';
-import { MapControls } from './MapControls';
+import { MapControls, MapFilterState, DEFAULT_MAP_FILTER, PRIMARY_RELATIONSHIPS, SECONDARY_RELATIONSHIPS } from './MapControls';
 import { MindMapNode, MindMapEdge, NodeType } from '../types';
 import { Loader2 } from 'lucide-react';
 
@@ -152,12 +152,12 @@ function ResearchEdge({
       {label && showLabel && (
         <EdgeLabelRenderer>
           <div
-            className="pointer-events-auto absolute rounded-[var(--radius-xs)] border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-[0.08em]"
+            className="pointer-events-auto absolute border-[1.5px] px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase tracking-[0.08em]"
             style={{
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY + labelOffset}px)`,
               color: 'var(--text-secondary)',
               backgroundColor: 'var(--surface-base)',
-              borderColor: selected || hovered ? 'var(--accent)' : 'var(--border-subtle)',
+              borderColor: selected || hovered ? 'var(--accent)' : 'var(--border-medium)',
               opacity: selected || hovered ? 1 : priority === 'anchor' ? 0.86 : 0.72,
               boxShadow: 'var(--shadow-xs)',
               zIndex: selected || hovered ? 3 : 1
@@ -196,8 +196,8 @@ function InnerMindMap({ sessionId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedNodeData, setSelectedNodeData] = useState<any | null>(null);
-  const [activeFilter, setActiveFilter] = useState<NodeType | 'ALL'>('ALL');
-  const [layoutDirection, setLayoutDirection] = useState<'LR' | 'TB'>('LR');
+  const [filter, setFilter] = useState<MapFilterState>(DEFAULT_MAP_FILTER);
+  const layoutDirection: 'LR' | 'TB' = 'LR';
   const [showMinimap, setShowMinimap] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
 
@@ -318,19 +318,6 @@ function InnerMindMap({ sessionId }: Props) {
     if (currentZoom) setZoomLevel(currentZoom);
   }, [getZoom]);
 
-  const toggleLayout = useCallback(() => {
-    const nextDir = layoutDirection === 'LR' ? 'TB' : 'LR';
-    setLayoutDirection(nextDir);
-    const { nodes: autoLayoutedNodes, edges: newEdges } = getLayoutedElements(nodes, edges, nextDir);
-    const newNodes = autoLayoutedNodes.map((node) => ({
-      ...node,
-      position: savedPositionsRef.current[node.id] || node.position
-    }));
-    setNodes(newNodes);
-    setEdges(newEdges);
-    setTimeout(() => fitView({ padding: 0.05, duration: 250 }), 50);
-  }, [layoutDirection, nodes, edges, setNodes, setEdges, fitView]);
-
   const resetLayout = useCallback(() => {
     resettingLayoutRef.current = true;
     localStorage.removeItem(positionsKey(sessionId));
@@ -398,27 +385,57 @@ function InnerMindMap({ sessionId }: Props) {
     setEdges((current) => current.map((edge) => ({ ...edge, selected: false })));
   }, [setEdges, setNodes]);
 
-  // Node filtering
+  // Keyboard: F = fit graph to screen
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest('input, textarea, [contenteditable="true"]')) return;
+      if (e.key.toLowerCase() === 'f') {
+        fitView({ padding: 0.05, duration: 250 });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [fitView]);
+
+  // Node & connection visibility filtering
+  useEffect(() => {
+    const hiddenNodeIds = new Set<string>();
+    const isTypeVisible = (type: string, f: MapFilterState): boolean => {
+      switch (type) {
+        case 'SESSION': return f.sessions;
+        case 'SEARCH': return f.searches;
+        case 'PAGE':
+        case 'SOURCE_PAPER': return f.sources;
+        case 'DOMAIN': return f.domains;
+        default: return true;
+      }
+    };
+
     setNodes((nds) =>
       nds.map((n) => {
-        const matchesFilter = activeFilter === 'ALL' || n.type === activeFilter;
+        const visible = isTypeVisible(String(n.type), filter);
+        if (!visible) hiddenNodeIds.add(n.id);
+        return { ...n, hidden: !visible };
+      })
+    );
+    setEdges((current) =>
+      current.map((edge) => {
+        const relationship = String(edge.data?.relationship || edge.label || '');
+        const relationshipVisible = PRIMARY_RELATIONSHIPS.has(relationship)
+          ? filter.researchConnections
+          : SECONDARY_RELATIONSHIPS.has(relationship)
+            ? filter.secondaryConnections
+            : true;
+        const touchesHiddenNode = hiddenNodeIds.has(edge.source) || hiddenNodeIds.has(edge.target);
+        const isDomainEdge = edge.source.startsWith('domain:') || edge.target.startsWith('domain:');
         return {
-          ...n,
-          hidden: n.type === 'DOMAIN' && activeFilter !== 'DOMAIN',
-          data: {
-            ...n.data,
-            isDimmed: !matchesFilter
-          }
+          ...edge,
+          hidden: !relationshipVisible || touchesHiddenNode || (isDomainEdge && !filter.domains)
         };
       })
     );
-    setEdges((current) => current.map((edge) => ({
-      ...edge,
-      hidden: (edge.source.startsWith('domain:') || edge.target.startsWith('domain:'))
-        && activeFilter !== 'DOMAIN'
-    })));
-  }, [activeFilter, setEdges, setNodes]);
+  }, [filter, setEdges, setNodes]);
 
   // Connected nodes calculation
   const connectedNodesForSelected = useMemo(() => {
@@ -477,26 +494,34 @@ function InnerMindMap({ sessionId }: Props) {
 
   if (loading && nodes.length === 0) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--text-muted)] text-xs font-mono select-none">
-        <Loader2 className="w-4 h-4 animate-spin text-[var(--text-secondary)]" />
-        <span>Loading your research trail&hellip;</span>
+      <div className="w-full h-full flex items-center justify-center select-none bg-[var(--graph-bg)]">
+        <div className="b-panel px-6 py-5 flex items-center gap-3">
+          <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+          <span className="font-mono text-xs font-bold uppercase tracking-[0.1em] text-[var(--text-secondary)]">
+            Reconstructing your research trail&hellip;
+          </span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center gap-3 select-none">
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-xs text-[var(--text-secondary)] font-medium">Couldn&apos;t load this research map.</span>
-          <span className="text-[11px] text-[var(--text-muted)] font-mono max-w-xs leading-relaxed">
+      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center gap-4 select-none bg-[var(--graph-bg)]">
+        <div className="b-panel px-6 py-5 flex flex-col items-center gap-2 max-w-sm">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--status-danger)]">
+            Graph load failure
+          </span>
+          <span className="font-display text-sm font-bold text-[var(--text-primary)]">
+            Couldn&apos;t load this research map.
+          </span>
+          <span className="text-[11px] text-[var(--text-muted)] font-mono leading-relaxed">
             {error}
           </span>
         </div>
         <button
           onClick={loadGraph}
-          className="px-3 py-1.5 rounded text-xs font-semibold text-white transition-colors"
-          style={{ backgroundColor: 'var(--accent)' }}
+          className="b-btn b-btn--accent text-xs px-4 py-1.5"
         >
           Retry
         </button>
@@ -507,9 +532,12 @@ function InnerMindMap({ sessionId }: Props) {
   return (
     <div ref={mapContainerRef} className="w-full h-full min-w-0 min-h-0 relative select-none">
       {nodes.filter((n) => n.type !== 'SESSION').length === 0 ? (
-        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-xs text-[var(--text-muted)] select-none">
-          <span className="font-medium text-[var(--text-secondary)] mb-1">This session doesn&apos;t have enough research activity to build a map yet.</span>
-          <span className="text-[11px] font-mono leading-relaxed max-w-xs">Try running a deep research query or importing sources to populate the workspace.</span>
+        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-[var(--graph-bg)] select-none">
+          <div className="b-panel px-6 py-5 max-w-sm flex flex-col gap-1.5">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Empty canvas</span>
+            <span className="font-display text-sm font-bold text-[var(--text-primary)]">This session doesn&apos;t have enough research activity to build a map yet.</span>
+            <span className="text-[11px] font-mono text-[var(--text-muted)] leading-relaxed">Try running a deep research query or importing sources to populate the workspace.</span>
+          </div>
         </div>
       ) : (
         <ReactFlow
@@ -542,29 +570,32 @@ function InnerMindMap({ sessionId }: Props) {
           />
 
           {showMinimap && (
-            <MiniMap 
+            <MiniMap
               style={{
                 position: 'absolute',
                 bottom: 12,
                 right: 12,
-                width: 140,
-                height: 90,
-                margin: 0
+                width: 150,
+                height: 96,
+                margin: 0,
+                border: '2px solid var(--border-strong)',
+                borderRadius: 2,
+                boxShadow: 'var(--shadow-md)'
               }}
-              nodeStrokeWidth={1}
+              nodeStrokeWidth={1.5}
               nodeColor={(n) => {
                 switch (n.type) {
-                  case 'SESSION': return 'var(--node-concept)';
+                  case 'SESSION': return 'var(--node-session)';
                   case 'SOURCE_PAPER': return 'var(--node-paper)';
                   case 'PAGE': return 'var(--node-page)';
                   case 'CONCEPT': return 'var(--node-concept)';
                   case 'SEARCH': return 'var(--node-search)';
                   case 'AI_INSIGHT': return 'var(--node-insight)';
-                  case 'DOMAIN': return 'var(--text-secondary)';
+                  case 'DOMAIN': return 'var(--node-domain)';
                   default: return 'var(--text-muted)';
                 }
               }}
-              maskColor="rgba(0, 0, 0, 0.2)"
+              maskColor="rgba(0, 0, 0, 0.35)"
             />
           )}
 
@@ -574,15 +605,12 @@ function InnerMindMap({ sessionId }: Props) {
             onZoomOut={() => zoomOut({ duration: 200 })}
             onFitView={() => fitView({ padding: 0.05, duration: 250 })}
             onResetLayout={resetLayout}
-            activeFilter={activeFilter}
-            onFilterChange={setActiveFilter}
-            layoutDirection={layoutDirection}
-            onToggleLayout={toggleLayout}
+            filter={filter}
+            onFilterChange={setFilter}
+            onResetFilter={() => setFilter(DEFAULT_MAP_FILTER)}
             showMinimap={showMinimap}
             onToggleMinimap={() => setShowMinimap(!showMinimap)}
             onExport={handleExportGraph}
-            nodeCount={nodes.length}
-            edgeCount={edges.length}
           />
         </ReactFlow>
       )}

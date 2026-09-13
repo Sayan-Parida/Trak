@@ -86,17 +86,17 @@ export default function SessionList({
   if (isCollapsed) {
     return (
       <aside 
-        className="h-full flex flex-col items-center py-2 border-r transition-all duration-200 z-10 shrink-0 select-none"
+        className="h-full flex flex-col items-center py-2 border-r-2 transition-all duration-200 z-10 shrink-0 select-none"
         style={{
           width: 48,
           backgroundColor: 'var(--surface-base)',
-          borderColor: 'var(--border-subtle)',
+          borderColor: 'var(--border-strong)',
         }}
       >
         <button
           onClick={onToggleCollapse}
           title={`Expand Workspaces (${shortcutLabel('B')})`}
-          className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] mb-2 transition-colors"
+          className="b-btn b-btn--square mb-2"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -104,21 +104,21 @@ export default function SessionList({
         <button
           onClick={onOpenNewSessionModal}
           title="New Workspace"
-          className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] mb-3 transition-colors"
+          className="b-btn b-btn--accent b-btn--square mb-3"
         >
           <Plus className="w-4 h-4" />
         </button>
 
-        <div className="flex-1 w-full overflow-y-auto flex flex-col items-center gap-1 px-1">
+        <div className="flex-1 w-full overflow-y-auto flex flex-col items-center gap-1.5 px-1">
           {sessions.map((session) => (
             <button
               key={session.id}
               onClick={() => onSelectSession(session.id)}
               title={session.title}
-              className={`w-7 h-7 rounded flex items-center justify-center text-[10px] font-mono font-medium transition-colors ${
+              className={`w-8 h-8 flex items-center justify-center text-[10px] font-mono font-bold transition-all ${
                 selectedSessionId === session.id
-                  ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] font-bold'
-                  : 'text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'
+                  ? 'bg-[var(--accent)] text-[var(--surface-base)] border-2 border-[var(--border-strong)] shadow-[2px_2px_0_var(--shadow-ink)]'
+                  : 'bg-[var(--surface-base)] text-[var(--text-muted)] border border-[var(--border-medium)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
               }`}
             >
               {(session.title || 'Untitled').slice(0, 2).toUpperCase()}
@@ -131,32 +131,34 @@ export default function SessionList({
 
   return (
     <aside 
-      className="h-full flex flex-col border-r transition-all duration-200 z-10 shrink-0 select-none"
+      className="h-full flex flex-col border-r-2 transition-all duration-200 z-10 shrink-0 select-none"
       style={{
-        width: 268,
+        width: 300,
         backgroundColor: 'var(--surface-base)',
-        borderColor: 'var(--border-subtle)',
+        borderColor: 'var(--border-strong)',
       }}
     >
       {/* Sidebar Header */}
       <div 
-        className="h-12 px-4 border-b flex items-center justify-between shrink-0"
-        style={{ borderColor: 'var(--border-subtle)' }}
+        className="h-14 px-3.5 border-b-2 flex items-center justify-between shrink-0"
+        style={{ borderColor: 'var(--border-strong)' }}
       >
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)]">
-            Research files
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-[var(--text-primary)]">
+            Research archive
           </span>
-          <span className="text-[10px] font-mono text-[var(--text-faint)]">
-            ({sessions.length})
+          <span 
+            className="font-mono text-[10px] font-bold px-1.5 py-0.5 leading-none rounded-[var(--radius-xs)] bg-[var(--border-strong)] text-[var(--surface-base)]"
+          >
+            {sessions.length}
           </span>
         </div>
 
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           <button
             onClick={onOpenNewSessionModal}
             title="New Workspace"
-            className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+            className="b-btn b-btn--accent b-btn--square"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -164,7 +166,7 @@ export default function SessionList({
           <button
             onClick={onToggleCollapse}
             title={`Collapse Sidebar (${shortcutLabel('B')})`}
-            className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+            className="b-btn b-btn--square"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
@@ -172,32 +174,24 @@ export default function SessionList({
       </div>
 
       {/* Filter / Search mini-bar */}
-      <div className="p-3.5 border-b space-y-2.5" style={{ borderColor: 'var(--border-subtle)' }}>
-        <div 
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-sm)] border bg-[var(--surface-subtle)] text-xs"
-          style={{ borderColor: 'var(--border-subtle)' }}
-        >
+      <div className="p-3.5 border-b-2 space-y-2.5" style={{ borderColor: 'var(--border-subtle)' }}>
+        <div className="b-input">
           <Search className="w-3 h-3 text-[var(--text-faint)] shrink-0" />
           <input
             type="text"
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
-            placeholder="Filter..."
-            className="w-full bg-transparent text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
+            placeholder="Filter sessions..."
           />
         </div>
 
         {/* Status filter tabs */}
-        <div className="flex items-center gap-1 text-[11px]">
+        <div className="flex items-center gap-1.5 text-[11px]">
           {(['ALL', 'ACTIVE', 'COMPLETED'] as const).map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`flex-1 py-0.5 rounded text-center transition-colors ${
-                statusFilter === st 
-                  ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] font-semibold' 
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-              }`}
+              className={`b-seg ${statusFilter === st ? 'b-seg--on' : ''}`}
             >
               {st === 'ALL' ? 'All' : st[0] + st.slice(1).toLowerCase()}
             </button>
@@ -205,62 +199,88 @@ export default function SessionList({
         </div>
       </div>
 
-      {/* Clean Session Item List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+      {/* Session List */}
+      <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
         {loading && sessions.length === 0 ? (
-          <div className="text-center py-6 text-xs text-[var(--text-muted)]">Loading...</div>
+          <div className="text-center py-8 text-xs font-mono text-[var(--text-muted)]">
+            <span className="inline-block w-2 h-2 animate-pulse bg-[var(--accent)] mr-2" />
+            LOADING ARCHIVE&hellip;
+          </div>
         ) : filteredSessions.length === 0 ? (
-          <div className="text-center py-6 px-2 text-xs text-[var(--text-muted)]">
+          <div className="b-panel text-center py-8 px-3 text-xs font-mono text-[var(--text-muted)]">
             No sessions found.
           </div>
         ) : (
-          filteredSessions.map((session) => {
+          filteredSessions.map((session, index) => {
             const isSelected = selectedSessionId === session.id;
+            const statusTone = session.status === 'ACTIVE'
+              ? 'var(--status-active)'
+              : session.status === 'ARCHIVED'
+                ? 'var(--accent-warm)'
+                : 'var(--border-strong)';
             return (
               <div
                 key={session.id}
                 onClick={() => onSelectSession(session.id)}
-                className={`group px-3 py-2.5 rounded-[var(--radius-sm)] text-left transition-colors cursor-pointer flex flex-col gap-1 border border-transparent ${
-                  isSelected 
-                    ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] border-l-2 border-[var(--accent)]' 
-                    : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'
+                className={`group border-2 rounded-[var(--radius-sm)] text-left cursor-pointer flex flex-col gap-1.5 transition-all ${
+                  isSelected
+                    ? 'bg-[var(--surface-elevated)] border-[var(--border-strong)] shadow-[4px_4px_0_var(--shadow-ink)] -translate-x-[2px] -translate-y-[2px]'
+                    : 'bg-[var(--surface-base)] border-[var(--border-subtle)] hover:border-[var(--border-medium)] hover:shadow-[2px_2px_0_var(--shadow-ink)]'
                 }`}
               >
-                {/* Title and Favorite / Delete */}
-                <div className="flex items-center justify-between gap-1.5">
-                  <div className="flex items-center gap-1.5 min-w-0">
+                {/* Top row: live indicator + index + actions */}
+                <div className="flex items-center justify-between gap-2 px-3 pt-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span 
-                      className="w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ backgroundColor: session.status === 'ACTIVE' ? 'var(--status-active)' : 'var(--status-muted)' }}
+                      className={`inline-block w-2 h-2 shrink-0 ${session.status === 'ACTIVE' ? 'b-live--on' : ''}`}
+                      style={{ background: statusTone }}
                     />
-                    <span className="text-[13px] font-medium truncate leading-tight">
-                      {session.title}
+                    <span className="font-mono text-[10px] font-bold text-[var(--text-faint)]">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-faint)] shrink-0">
+                      {session.status}
                     </span>
                   </div>
 
                   <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => handleToggleFavorite(e, session)}
-                      className="p-0.5 text-[var(--text-muted)] hover:text-[var(--status-warning)]"
+                      className="w-6 h-6 flex items-center justify-center border border-transparent hover:border-[var(--border-medium)] text-[var(--text-muted)] hover:text-[var(--status-warning)]"
+                      title={session.favorite ? 'Unfavorite' : 'Favorite'}
                     >
                       <Star className={`w-3 h-3 ${session.favorite ? 'fill-[var(--status-warning)] text-[var(--status-warning)]' : ''}`} />
                     </button>
                     <button
                       onClick={(e) => handleDelete(e, session.id)}
-                      className="p-0.5 text-[var(--text-muted)] hover:text-[var(--status-danger)]"
+                      className="w-6 h-6 flex items-center justify-center border border-transparent hover:border-[var(--status-danger)] text-[var(--text-muted)] hover:text-[var(--status-danger)]"
+                      title="Delete session"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
 
-                {/* Minimal Meta */}
-                <div className="flex items-center gap-2 pl-3 text-[11px] font-mono text-[var(--text-muted)]">
-                  <span>{formatArchiveDate(session.startTime)}</span>
-                  <span>•</span>
-                  <span>{session.pageCount} pages</span>
-                  <span>•</span>
-                  <span>{session.searchCount} searches</span>
+                {/* Title */}
+                <div className="px-3">
+                  <span 
+                    className="font-display text-[15px] font-bold leading-[1.1] text-[var(--text-primary)] line-clamp-2"
+                  >
+                    {session.title}
+                  </span>
+                </div>
+
+                {/* Meta strip */}
+                <div 
+                  className="px-3 pb-2.5 flex items-center justify-between gap-2 font-mono text-[10px] text-[var(--text-muted)]"
+                >
+                  <span className="font-bold text-[var(--text-secondary)]">
+                    {formatArchiveDate(session.startTime)}
+                  </span>
+                  <span className="flex items-center gap-1 flex-wrap justify-end">
+                    <span className="border border-[var(--border-subtle)] px-1 py-px rounded-[var(--radius-xs)]">P {session.pageCount}</span>
+                    <span className="border border-[var(--border-subtle)] px-1 py-px rounded-[var(--radius-xs)]">Q {session.searchCount}</span>
+                  </span>
                 </div>
               </div>
             );
@@ -270,17 +290,17 @@ export default function SessionList({
 
       {/* Footer */}
       <div 
-        className="h-8 px-3 border-t text-[10px] font-mono text-[var(--text-faint)] flex items-center justify-between shrink-0"
-        style={{ borderColor: 'var(--border-subtle)' }}
+        className="h-8 px-3 text-[10px] font-mono font-bold text-[var(--surface-base)] flex items-center justify-between shrink-0"
+        style={{ backgroundColor: 'var(--border-strong)' }}
       >
-        <span>Pariet / local archive</span>
+        <span className="uppercase tracking-[0.14em]">Pariet / Local</span>
         <button
           onClick={() => {
             if (window.confirm('Reset sample research graphs?')) {
               researchStore.resetToDefault();
             }
           }}
-          className="hover:text-[var(--text-primary)]"
+          className="uppercase tracking-[0.1em] border border-[var(--surface-base)] px-1.5 py-px hover:bg-[var(--surface-base)] hover:text-[var(--border-strong)] transition-colors"
         >
           Reset
         </button>

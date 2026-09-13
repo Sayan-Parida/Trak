@@ -3,11 +3,6 @@ import {
   Plus, 
   Compass, 
   ArrowRight,
-  CalendarDays,
-  Clock3,
-  Search,
-  BookOpen,
-  Globe2,
   MapPinned
 } from 'lucide-react';
 import Navbar from './components/Navbar';
@@ -41,7 +36,7 @@ export default function App() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'mindmap' | 'timeline' | 'pages'>('mindmap');
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('researchmind-theme') as Theme) || 'system');
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('researchmind-theme') as Theme) || 'light');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
@@ -111,7 +106,7 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
 
       {/* Main App Workspace Shell */}
       <main className="relative flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* Compact Desktop Top Bar */}
+        {/* Desktop Top Bar */}
         <Navbar
           activeSession={activeSession}
           activeTab={activeTab}
@@ -125,7 +120,7 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
 
         {/* Command Search Overlay / Dropdown */}
         {isSearchOpen && (
-          <div className="fixed inset-0 z-40 flex items-start justify-center pt-16 bg-black/30 backdrop-blur-xs">
+          <div className="fixed inset-0 z-40 flex items-start justify-center pt-16 bg-black/70">
             <div className="w-full max-w-lg p-2">
               <ResearchSearch
                 activeSessionId={selectedSessionId}
@@ -147,95 +142,131 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
         )}
 
         {activeSession && (
-          <section className="shrink-0 border-b border-[var(--border-subtle)] bg-[var(--surface-base)] px-6 py-6 lg:px-8">
-            <div className="mx-auto flex max-w-[1500px] items-end justify-between gap-6">
-              <div className="min-w-0">
-                <div className="mb-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--accent)]">
-                  <MapPinned className="h-3.5 w-3.5" />
-                  <span>Research session</span>
-                  <span className="h-1 w-1 rounded-full bg-[var(--status-active)]" />
-                  <span className="text-[var(--text-muted)]">{activeSession.status.toLowerCase()}</span>
+          <section className="shrink-0 relative bg-[var(--surface-base)] px-6 lg:px-10 pt-4 pb-4 border-b-2 border-[var(--border-strong)]">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              {/* Left: RESEARCH SESSION status + title */}
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="b-tag b-tag--accent">
+                    <MapPinned className="w-2.5 h-2.5" />
+                    Research session
+                  </span>
+                  <span
+                    className={`b-live ${activeSession.status === 'ACTIVE' ? 'b-live--on' : ''}`}
+                    style={{ background: activeSession.status === 'ACTIVE' ? 'var(--status-active)' : 'var(--status-muted)' }}
+                  />
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                    {activeSession.status}
+                    {activeSession.status === 'ACTIVE' ? ' • live trail' : ''}
+                  </span>
                 </div>
-                <h1 style={{ fontFamily: 'var(--font-display)' }} className="max-w-4xl truncate text-3xl leading-[0.98] tracking-[-0.025em] text-[var(--text-primary)] sm:text-4xl">
+
+                <h1 style={{ fontFamily: 'var(--font-display)' }} className="min-w-0 truncate text-xl font-bold leading-none tracking-[-0.02em] text-[var(--text-primary)] sm:text-2xl">
                   {activeSession.title}
                 </h1>
-                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] font-mono text-[var(--text-muted)]">
-                  <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3 w-3 text-[var(--node-page)]" />{formatSessionDate(activeSession.startTime)}</span>
-                  <span className="inline-flex items-center gap-1.5"><Clock3 className="h-3 w-3 text-[var(--node-concept)]" />{formatSessionDuration(activeSession.startTime, activeSession.endTime)}</span>
-                  <span className="inline-flex items-center gap-1.5"><Search className="h-3 w-3 text-[var(--node-search)]" />{activeSession.searchCount} searches</span>
-                  <span className="inline-flex items-center gap-1.5"><BookOpen className="h-3 w-3 text-[var(--node-paper)]" />{activeSession.pageCount} pages</span>
-                  <span className="inline-flex items-center gap-1.5"><Globe2 className="h-3 w-3 text-[var(--text-secondary)]" />{activeSession.entityCount} entities</span>
+              </div>
+
+              {/* Middle: editorial stat blocks centered in the open middle band */}
+              <div className="mx-auto flex flex-wrap items-center gap-2">
+                <div className="flex flex-col gap-1 border-2 border-[var(--accent)] bg-[var(--accent-subtle)] rounded-[var(--radius-sm)] px-2.5 py-1.5 min-w-[86px]">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Started</span>
+                  <span className="font-mono text-xs font-bold text-[var(--text-primary)]">{formatSessionDate(activeSession.startTime)}</span>
+                </div>
+                <div className="flex flex-col gap-1 border-2 border-[var(--border-medium)] bg-[var(--surface-elevated)] rounded-[var(--radius-sm)] px-2.5 py-1.5 min-w-[86px]">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-faint)]">Duration</span>
+                  <span className="font-mono text-xs font-bold text-[var(--text-primary)]">{formatSessionDuration(activeSession.startTime, activeSession.endTime)}</span>
+                </div>
+                <div className="flex flex-col gap-1 border-2 border-[var(--accent-warm)] bg-[var(--accent-warm-subtle)] rounded-[var(--radius-sm)] px-2.5 py-1.5 min-w-[86px]">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Searches</span>
+                  <span className="font-mono text-xs font-bold text-[var(--text-primary)]">{activeSession.searchCount}</span>
+                </div>
+                <div className="flex flex-col gap-1 border-2 border-[var(--node-page)] bg-[var(--node-page-bg)] rounded-[var(--radius-sm)] px-2.5 py-1.5 min-w-[86px]">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Pages</span>
+                  <span className="font-mono text-xs font-bold text-[var(--text-primary)]">{activeSession.pageCount}</span>
                 </div>
               </div>
-              <div className="hidden max-w-52 shrink-0 border-l border-[var(--border-subtle)] pl-5 text-right lg:block">
-                <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-faint)]">Last known activity</div>
-                <div className="mt-1 text-sm font-medium text-[var(--text-primary)]">
-                  {activeSession.endTime ? formatSessionDate(activeSession.endTime) : 'Research in progress'}
-                </div>
-                <div className="mt-1 text-[11px] text-[var(--text-muted)]">
-                  {activeSession.endTime ? 'Session stopped here' : 'Trail is still active'}
+
+              {/* Right: LAST KNOWN ACTIVITY pinned upper-right */}
+              <div className="hidden shrink-0 lg:block">
+                <div className="b-panel max-w-52 px-3.5 py-3 text-right">
+                  <div className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-faint)]">
+                    Last known activity
+                  </div>
+                  <div className="mt-1.5 font-display text-sm font-bold text-[var(--text-primary)]">
+                    {activeSession.endTime ? formatSessionDate(activeSession.endTime) : 'Research in progress'}
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
+                    {activeSession.endTime ? 'Session stopped here' : 'Trail is still active'}
+                  </div>
                 </div>
               </div>
             </div>
+            {/* Stripe accent above the bottom rule */}
+            <div className="stripes-accent absolute bottom-0 left-0 right-0 h-[5px]" />
           </section>
         )}
 
         {/* Hero Canvas Area */}
         <div className="flex-1 min-h-0 relative overflow-hidden bg-[var(--graph-bg)]">
           {!selectedSessionId ? (
-            /* Quiet Welcome State */
-            <div className="h-full flex flex-col items-center justify-center p-6 text-center max-w-lg mx-auto space-y-4">
+            /* Welcome State */
+            <div className="h-full flex flex-col items-center justify-center p-6 text-center max-w-lg mx-auto space-y-5">
               <div 
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
+                className="relative w-14 h-14 flex items-center justify-center border-2 border-[var(--border-strong)] shadow-[4px_4px_0_var(--shadow-ink)]"
                 style={{ backgroundColor: 'var(--accent)' }}
               >
-                <Compass className="w-5 h-5" />
+                <Compass className="w-6 h-6 text-[var(--surface-base)]" />
+                <span className="absolute -top-2 -right-2 w-3.5 h-3.5 bg-[var(--accent-yellow)] border-2 border-[var(--border-strong)]" />
               </div>
 
               <div>
-                <h1 className="text-base font-bold text-[var(--text-primary)] mb-1">
-                  ResearchMind
+                <h1 className="font-display text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+                  Pariet — Research Mind
                 </h1>
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                <p className="text-xs font-mono text-[var(--text-secondary)] tracking-wide">
                   Interactive knowledge graph workspace for deep literature exploration.
                 </p>
               </div>
 
-              <div className="w-full space-y-1.5 pt-2">
-                {sessions.slice(0, 4).map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setSelectedSessionId(s.id)}
-                    className="w-full p-2.5 rounded border text-left transition-colors hover:bg-[var(--surface-hover)] flex items-center justify-between group"
-                    style={{
-                      backgroundColor: 'var(--surface-base)',
-                      borderColor: 'var(--border-subtle)',
-                    }}
-                  >
-                    <div>
-                      <div className="text-xs font-medium text-[var(--text-primary)] truncate">
-                        {s.title}
+              <div className="w-full pt-1 border-t-2 border-dashed border-[var(--border-medium)]">
+                <div className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-faint)] mb-2 text-left">
+                  Recent sessions
+                </div>
+                <div className="w-full space-y-2">
+                  {sessions.slice(0, 4).map((s, i) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedSessionId(s.id)}
+                      className="group w-full border-2 border-[var(--border-subtle)] bg-[var(--surface-base)] rounded-[var(--radius-sm)] text-left transition-all hover:border-[var(--border-strong)] hover:shadow-[3px_3px_0_var(--shadow-ink)] hover:-translate-x-[1px] hover:-translate-y-[1px] flex items-center justify-between gap-3 p-2.5"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="b-stamp">{String(i + 1).padStart(2, '0')}</span>
+                        <div className="min-w-0 text-left">
+                          <div className="font-display text-[13px] font-bold text-[var(--text-primary)] truncate">
+                            {s.title}
+                          </div>
+                          <div className="font-mono text-[10px] font-bold text-[var(--text-muted)]">
+                            P {s.pageCount} • {s.status}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-[10px] font-mono text-[var(--text-muted)]">
-                        {s.pageCount} sources • {s.entityCount} nodes
-                      </div>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[var(--text-faint)] group-hover:text-[var(--text-primary)]" />
-                  </button>
-                ))}
+                      <ArrowRight className="w-4 h-4 text-[var(--text-faint)] group-hover:text-[var(--text-primary)] shrink-0" />
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <button
                 onClick={() => setShowNewSessionModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-colors"
+                className="b-btn b-btn--accent text-sm px-4 py-2"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4" />
                 <span>New Workspace</span>
               </button>
             </div>
           ) : (
             /* Active Views */
-            <>
+            <div key={activeTab} className="view-enter w-full h-full">
               {activeTab === 'mindmap' && (
                 <MindMap sessionId={selectedSessionId} focusNodeId={focusNodeId} />
               )}
@@ -248,7 +279,7 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
               {activeTab === 'pages' && (
                 <PagesView sessionId={selectedSessionId} />
               )}
-            </>
+            </div>
           )}
         </div>
       </main>

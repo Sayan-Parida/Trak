@@ -69,16 +69,18 @@ const NodeWrapper = memo(({
 }) => {
   return (
     <div
-      className={`pariet-node relative rounded-[var(--radius-md)] ${compact ? 'p-2.5' : 'p-3'} transition-all duration-150 cursor-pointer select-none border-l-2`}
+      className={`pariet-node relative ${compact ? 'p-2.5' : 'p-3'} transition-all duration-150 cursor-pointer select-none border-l-4`}
       style={{
         width: compact ? 205 : 250,
-        backgroundColor: 'var(--surface-base)',
-        borderTop: `1px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-subtle)'}`,
-        borderRight: `1px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-subtle)'}`,
-        borderBottom: `1px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-subtle)'}`,
-        borderLeft: `2px solid ${accentColor}`,
+        backgroundColor: `var(${isFocused ? '--surface-elevated' : '--surface-base'})`,
+        borderTop: `2px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-strong)'}`,
+        borderRight: `2px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-strong)'}`,
+        borderBottom: `2px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-strong)'}`,
+        borderLeftColor: accentColor,
+        borderLeftWidth: 4,
+        borderRadius: 'var(--radius-sm)',
         boxShadow: selected || isFocused ? 'var(--shadow-md)' : 'var(--shadow-xs)',
-        opacity: isDimmed ? 0.2 : 1,
+        opacity: isDimmed ? 0.18 : 1,
       }}
     >
       <Handle 
@@ -129,22 +131,29 @@ const NodeWrapper = memo(({
       {/* Type badge line */}
       <div className="flex items-center justify-between gap-1.5 mb-2 text-[9px] font-mono uppercase tracking-[0.08em]">
         <span 
-          className="inline-flex items-center gap-1 px-1 py-0.5 rounded-[var(--radius-xs)] font-semibold"
-          style={{ backgroundColor: accentBg, color: accentColor }}
+          className="inline-flex items-center gap-1 px-1 py-0.5 border-[1.5px] font-bold"
+          style={{
+            backgroundColor: accentBg,
+            color: accentColor,
+            borderColor: 'var(--border-strong)',
+            borderRadius: 'var(--radius-xs)'
+          }}
         >
           <Icon className="w-2.5 h-2.5" />
           <span>{typeLabel}</span>
         </span>
         {showTypeBadge && (
-          <span className="ml-1 text-[0.65em] font-semibold rounded-[var(--radius-xs)] px-1.5 py-0.5 text-xs tracking-[0.08em]"
-            style={{ backgroundColor: typeBadgeBg, color: typeBadgeFg }}
+          <span className="ml-1 text-[0.65em] font-bold border-[1.5px] px-1.5 py-0.5 text-xs tracking-[0.08em]"
+            style={{ backgroundColor: typeBadgeBg, color: typeBadgeFg, borderColor: 'var(--border-strong)', borderRadius: 'var(--radius-xs)' }}
           >
             {typeBadgeLabel}
           </span>
         )}
         {isLatest && (
-          <span className="ml-auto text-[8px] font-semibold tracking-[0.08em] text-[var(--accent)]">
-            STOPPING POINT
+          <span className="ml-auto inline-flex items-center gap-1 text-[8px] font-bold tracking-[0.08em] py-0.5 px-1"
+            style={{ color: 'var(--surface-base)', backgroundColor: 'var(--border-strong)', borderColor: 'var(--border-strong)', borderRadius: 'var(--radius-xs)' }}
+          >
+            ◼ STOPPING POINT
           </span>
         )}
       </div>
@@ -173,7 +182,7 @@ export const PaperNode = memo(({ data, selected }: CustomNodeProps) => {
         {data.label}
       </div>
 
-      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">
+      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t-2 border-[var(--border-strong)]">
         <span className="truncate max-w-[140px]">{data.domain || 'academic'}</span>
         {data.citationCount !== undefined && <span>{data.citationCount} cited</span>}
       </div>
@@ -204,7 +213,7 @@ export const PageNode = memo(({ data, selected }: CustomNodeProps) => {
         {data.label}
       </div>
 
-      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">
+      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t-2 border-[var(--border-strong)]">
         <span className="truncate max-w-[180px]">{data.domain || data.url?.replace(/^https?:\/\//, '')}</span>
       </div>
     </NodeWrapper>
@@ -262,7 +271,7 @@ export const SearchNode = memo(({ data, selected }: CustomNodeProps) => {
         &ldquo;{data.label}&rdquo;
       </div>
 
-      <div className="text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">
+      <div className="text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t-2 border-[var(--border-strong)]">
         Search expansion
       </div>
     </NodeWrapper>
@@ -302,20 +311,23 @@ InsightNode.displayName = 'InsightNode';
 export const DomainNode = memo(({ data, selected }: CustomNodeProps) => {
   return (
     <div
-      className="px-2 py-1 rounded-[var(--radius-xs)] transition-colors select-none flex items-center gap-1.5 border-l-2"
+      className="px-2 py-1 transition-colors select-none flex items-center gap-1.5 border-l-4"
       style={{
         backgroundColor: 'var(--surface-base)',
-        borderTop: `1px solid ${selected ? 'var(--accent)' : 'var(--border-subtle)'}`,
-        borderRight: `1px solid ${selected ? 'var(--accent)' : 'var(--border-subtle)'}`,
-        borderBottom: `1px solid ${selected ? 'var(--accent)' : 'var(--border-subtle)'}`,
-        borderLeft: '2px solid var(--node-concept)',
-        opacity: data.isDimmed ? 0.2 : 1,
+        borderTop: `2px solid ${selected ? 'var(--accent)' : 'var(--border-strong)'}`,
+        borderRight: `2px solid ${selected ? 'var(--accent)' : 'var(--border-strong)'}`,
+        borderBottom: `2px solid ${selected ? 'var(--accent)' : 'var(--border-strong)'}`,
+        borderLeftColor: 'var(--node-domain)',
+        borderLeftWidth: 4,
+        borderRadius: 'var(--radius-xs)',
+        boxShadow: 'var(--shadow-xs)',
+        opacity: data.isDimmed ? 0.18 : 1,
       }}
     >
-      <Handle type="target" position={Position.Left} style={{ background: 'var(--border-strong)' }} />
-      <Handle type="source" position={Position.Right} style={{ background: 'var(--border-strong)' }} />
+      <Handle type="target" position={Position.Left} style={{ background: 'var(--border-strong)', borderRadius: 0 }} />
+      <Handle type="source" position={Position.Right} style={{ background: 'var(--border-strong)', borderRadius: 0 }} />
       <Layers className="w-3 h-3 text-[var(--text-muted)]" />
-      <span className="text-[11px] font-mono text-[var(--text-secondary)] font-medium">{data.label}</span>
+      <span className="text-[11px] font-mono text-[var(--text-secondary)] font-bold">{data.label}</span>
     </div>
   );
 });
@@ -327,8 +339,8 @@ export const nodeTypes = {
       selected={selected}
       isDimmed={data.isDimmed}
       isFocused={data.isFocused}
-      accentColor="var(--node-concept)"
-      accentBg="var(--node-concept-bg)"
+      accentColor="var(--node-session)"
+      accentBg="var(--node-session-bg)"
       typeLabel="Session"
       icon={Compass}
       compact={data.compact}
@@ -337,7 +349,7 @@ export const nodeTypes = {
       <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] line-clamp-2 mb-2">
         {data.label}
       </div>
-      <div className="text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">
+      <div className="text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t-2 border-[var(--border-strong)]">
         Root workspace
       </div>
     </NodeWrapper>
