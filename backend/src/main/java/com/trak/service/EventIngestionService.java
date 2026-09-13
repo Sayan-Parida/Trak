@@ -84,7 +84,7 @@ public class EventIngestionService {
                 event.setReferrerUrl(request.referrerUrl());
                 event.setTimestamp(timestamp);
 
-                if (sessionId != null && sessionDetector.isValidSession(sessionId)) {
+                if (sessionId != null && sessionDetector.isValidSessionEvent(sessionId, timestamp)) {
                     event.setSessionId(sessionId);
                 }
 
@@ -97,7 +97,8 @@ public class EventIngestionService {
                         searchIndexService.indexPage(visit);
                     }
 
-                    searchDetector.detect(event.getUrl()).ifPresent(result -> {
+                    if (event.getEventType() == EventType.NAVIGATION) {
+                        searchDetector.detect(event.getUrl()).ifPresent(result -> {
                         SearchQuery query = new SearchQuery();
                         query.setQueryText(result.queryText());
                         query.setNormalizedQuery(ResearchTextNormalizer.normalize(result.queryText()));
@@ -117,7 +118,8 @@ public class EventIngestionService {
                             }
                             searchIndexService.indexSearch(searchQueryRepository.save(query));
                         }
-                    });
+                        });
+                    }
                 }
 
                 event.setProcessed(true);

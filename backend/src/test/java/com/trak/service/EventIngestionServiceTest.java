@@ -131,6 +131,37 @@ class EventIngestionServiceTest {
                 "Same search text performed twice should create two SearchQuery occurrences");
     }
 
+        @Test
+        void ingestEvent_SearchUrlFromTabActivationDoesNotCreateSearchQuery() {
+        long timestamp = Instant.now().toEpochMilli();
+        BrowserEventRequest activation = new BrowserEventRequest(
+            "TAB_ACTIVATED",
+            "https://www.google.com/search?q=java+garbage+collection",
+            "Java GC - Google Search",
+            1, 1, null, null, timestamp, sessionId);
+
+        eventIngestionService.ingestEvent(activation);
+
+        assertTrue(searchQueryRepository.findBySessionId(sessionId).isEmpty(),
+            "Activating an existing search tab is not a new search event");
+        }
+
+        @Test
+        void ingestEvent_EventTimestampBeforeSessionStartIsNotAssociated() {
+        BrowserEventRequest oldEvent = new BrowserEventRequest(
+            "NAVIGATION",
+            "https://www.google.com/search?q=old+event",
+            "Old event",
+            1, 1, "link", null,
+            Instant.now().minusSeconds(60).toEpochMilli(), sessionId);
+
+        BrowserEvent saved = eventIngestionService.ingestEvent(oldEvent);
+
+        assertNull(saved.getSessionId(), "An event before session start must not enter the session");
+        assertTrue(pageVisitRepository.findBySessionId(sessionId).isEmpty());
+        assertTrue(searchQueryRepository.findBySessionId(sessionId).isEmpty());
+        }
+
     @Test
     void ingestEvent_DuplicateReplayedEventDoesNotCreateDuplicateSearchQuery() throws Exception {
         // Given: a search-matching BrowserEvent is ingested (Google search URL),

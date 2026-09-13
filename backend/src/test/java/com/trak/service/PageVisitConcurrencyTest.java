@@ -77,11 +77,15 @@ class PageVisitConcurrencyTest {
         return sessionRepository.save(session).getId();
     }
 
+        private Instant sessionEventStart(String sessionId) {
+                return sessionRepository.findById(sessionId).orElseThrow().getStartTime().plusSeconds(1);
+        }
+
     @Test
     void concurrentFirstVisits_createsExactlyOnePageVisitAndMaintainsCounts() throws Exception {
         String sessionId = createValidSession("Concurrent First Visits Session");
         String url = "https://example.com/first-visit-race-" + UUID.randomUUID();
-        Instant baseTime = Instant.parse("2026-03-01T12:00:00Z");
+        Instant baseTime = sessionEventStart(sessionId);
 
         int threads = 8;
         ExecutorService pool = Executors.newFixedThreadPool(threads);
@@ -135,7 +139,7 @@ class PageVisitConcurrencyTest {
     void concurrentUpdatesToExistingVisit_loseNoIncrements() throws Exception {
         String sessionId = createValidSession("Concurrent Updates Session");
         String url = "https://example.com/update-race-" + UUID.randomUUID();
-        Instant seedTime = Instant.parse("2026-03-01T14:00:00Z");
+        Instant seedTime = sessionEventStart(sessionId);
 
         // Seed initial visit
         BrowserEventRequest seedRequest = new BrowserEventRequest(
@@ -191,7 +195,7 @@ class PageVisitConcurrencyTest {
     void legitimateRepeatedEvents_remainRepresentedCorrectly() throws Exception {
         String sessionId = createValidSession("Repeated Events Session");
         String url = "https://example.com/repeated-page";
-        Instant baseTime = Instant.parse("2026-03-01T16:00:00Z");
+        Instant baseTime = sessionEventStart(sessionId);
 
         int repeatCount = 5;
         for (int i = 0; i < repeatCount; i++) {

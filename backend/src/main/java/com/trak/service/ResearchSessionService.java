@@ -126,6 +126,7 @@ public class ResearchSessionService {
 
     public MindMapResponse getMindMap(String sessionId) {
         ResearchSession session = getSession(sessionId);
+        List<BrowserEvent> events = eventRepository.findBySessionIdOrderByTimestamp(sessionId);
         List<PageVisit> pages = pageVisitRepository.findBySessionId(sessionId);
         List<SearchQuery> searches = searchQueryRepository.findBySessionId(sessionId);
 
@@ -159,6 +160,48 @@ public class ResearchSessionService {
             edges.add(new MindMapResponse.MindMapEdge(
                     "session:" + sessionId, pv.getId(), "CONTAINS", "Page visited in this session"
             ));
+        }
+
+        Map<Integer, List<BrowserEvent>> navigationEventsByTab = events.stream()
+                .filter(event -> event.getEventType() == com.trak.domain.model.EventType.NAVIGATION)
+                .filter(event -> event.getPageVisitId() != null)
+                .collect(Collectors.groupingBy(BrowserEvent::getTabId));
+        for (List<BrowserEvent> tabEvents : navigationEventsByTab.values()) {
+            for (int index = 1; index < tabEvents.size(); index++) {
+                BrowserEvent previous = tabEvents.get(index - 1);
+                BrowserEvent current = tabEvents.get(index);
+                if (!previous.getPageVisitId().equals(current.getPageVisitId())) {
+                    edges.add(new MindMapResponse.MindMapEdge(
+                            previous.getPageVisitId(), current.getPageVisitId(), "PAGE_TO_PAGE",
+                            "Consecutive navigation events in the same tab"));
+                    edges.add(new MindMapResponse.MindMapEdge(
+                            previous.getPageVisitId(), current.getPageVisitId(), "NAVIGATED_FROM",
+                            "Navigation followed the previous page in the same tab"));
+                }
+            }
+        }
+
+        List<SearchQuery> orderedSearches = searches.stream()
+                .sorted(Comparator.comparing(SearchQuery::getTimestamp))
+                .toList();
+        Map<String, BrowserEvent> eventBySearch = new HashMap<>();
+        for (SearchQuery search : orderedSearches) {
+            events.stream()
+                    .filter(event -> Objects.equals(event.getPageVisitId(), search.getPageVisitId()))
+                    .filter(event -> search.getTimestamp().equals(event.getTimestamp()))
+                    .findFirst()
+                    .ifPresent(event -> eventBySearch.put(search.getId(), event));
+        }
+        for (int index = 1; index < orderedSearches.size(); index++) {
+            SearchQuery previous = orderedSearches.get(index - 1);
+            SearchQuery current = orderedSearches.get(index);
+            BrowserEvent previousEvent = eventBySearch.get(previous.getId());
+            BrowserEvent currentEvent = eventBySearch.get(current.getId());
+            if (previousEvent != null && currentEvent != null && previousEvent.getTabId() == currentEvent.getTabId()) {
+                edges.add(new MindMapResponse.MindMapEdge(
+                        previous.getId(), current.getId(), "SEARCH_TO_SEARCH",
+                        "Subsequent search in the same tab"));
+            }
         }
 
         // RESULTS_IN edges using SearchQuery.pageVisitId as authoritative provenance.
