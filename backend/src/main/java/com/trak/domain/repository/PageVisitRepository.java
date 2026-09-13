@@ -10,6 +10,10 @@ import java.util.Optional;
 @Repository
 public interface PageVisitRepository extends JpaRepository<PageVisit, String> {
     List<PageVisit> findBySessionIdOrderByFirstVisited(String sessionId);
+        List<PageVisit> findBySessionIdAndFirstVisitedGreaterThanEqualOrderByFirstVisited(
+            String sessionId, java.time.Instant sessionStart);
+        List<PageVisit> findBySessionIdAndFirstVisitedBetweenOrderByFirstVisited(
+            String sessionId, java.time.Instant sessionStart, java.time.Instant sessionEnd);
     Optional<PageVisit> findByUrlAndSessionId(String url, String sessionId);
     List<PageVisit> findBySessionId(String sessionId);
     List<PageVisit> findByNormalizedTitleContainingIgnoreCase(String term);

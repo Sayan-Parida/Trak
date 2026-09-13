@@ -40,6 +40,12 @@ class EventIngestionServiceTest {
     @Autowired
     private ResearchSessionRepository sessionRepository;
 
+    @Autowired
+    private ResearchGraphService researchGraphService;
+
+    @Autowired
+    private ResearchSessionService researchSessionService;
+
     private String sessionId;
 
     @BeforeEach
@@ -79,6 +85,29 @@ class EventIngestionServiceTest {
         assertEquals("spring boot", searches.get(0).getQueryText());
         assertEquals("Google", searches.get(0).getEngine());
     }
+
+        @Test
+        void ingestEvent_ChromeNewTabIsExcludedFromResearchActivity() {
+        BrowserEvent saved = eventIngestionService.ingestEvent(new BrowserEventRequest(
+            "NAVIGATION",
+            "chrome://newtab/",
+            "New Tab",
+            1,
+            1,
+            "typed",
+            null,
+            Instant.now().toEpochMilli(),
+            sessionId));
+
+        assertNull(saved.getSessionId());
+        assertNull(saved.getPageVisitId());
+        assertTrue(pageVisitRepository.findBySessionId(sessionId).isEmpty());
+        assertTrue(searchQueryRepository.findBySessionId(sessionId).isEmpty());
+        assertTrue(researchGraphService.getGraph(sessionId).nodes().stream()
+            .noneMatch(node -> "PAGE".equals(node.type()) || "DOMAIN".equals(node.type())));
+        assertTrue(researchSessionService.getMindMap(sessionId).nodes().stream()
+            .noneMatch(node -> "PAGE".equals(node.type()) || "DOMAIN".equals(node.type())));
+        }
 
     @Test
     void ingestEvent_DuplicateEvent_ThrowsException() {

@@ -38,7 +38,7 @@ public class PageVisitService {
      */
     @Transactional
     public PageVisit createOrUpdatePageVisit(String url, String title, String sessionId, Instant timestamp) {
-        if (url == null || url.isBlank() || sessionId == null || sessionId.isBlank()) {
+        if (!isResearchUrl(url) || sessionId == null || sessionId.isBlank()) {
             return null;
         }
 
@@ -77,6 +77,13 @@ public class PageVisitService {
             visit.setDurationMs(0);
             return pageVisitRepository.save(visit);
         }
+    }
+
+    public static boolean isResearchUrl(String url) {
+        return url != null && !url.isBlank()
+                && !url.startsWith("chrome://")
+                && !url.startsWith("chrome-extension://")
+                && !url.startsWith("about:");
     }
 
     @Transactional

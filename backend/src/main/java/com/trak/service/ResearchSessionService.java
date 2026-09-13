@@ -115,8 +115,16 @@ public class ResearchSessionService {
     }
 
     public List<PageVisit> getPages(String sessionId) {
-        getSession(sessionId);
-        return pageVisitRepository.findBySessionIdOrderByFirstVisited(sessionId);
+        return getSessionScopedPages(getSession(sessionId));
+    }
+
+    private List<PageVisit> getSessionScopedPages(ResearchSession session) {
+        if (session.getEndTime() == null) {
+            return pageVisitRepository.findBySessionIdAndFirstVisitedGreaterThanEqualOrderByFirstVisited(
+                    session.getId(), session.getStartTime());
+        }
+        return pageVisitRepository.findBySessionIdAndFirstVisitedBetweenOrderByFirstVisited(
+                session.getId(), session.getStartTime(), session.getEndTime());
     }
 
     public List<SearchQuery> getSearches(String sessionId) {
@@ -127,7 +135,7 @@ public class ResearchSessionService {
     public MindMapResponse getMindMap(String sessionId) {
         ResearchSession session = getSession(sessionId);
         List<BrowserEvent> events = eventRepository.findBySessionIdOrderByTimestamp(sessionId);
-        List<PageVisit> pages = pageVisitRepository.findBySessionId(sessionId);
+        List<PageVisit> pages = getSessionScopedPages(session);
         List<SearchQuery> searches = searchQueryRepository.findBySessionId(sessionId);
 
         List<MindMapResponse.MindMapNode> nodes = new ArrayList<>();

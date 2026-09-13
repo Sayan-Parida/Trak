@@ -7,6 +7,8 @@ import com.trak.api.dto.SessionUpdateRequest;
 import com.trak.domain.model.EventType;
 import com.trak.domain.model.PageVisit;
 import com.trak.domain.model.ResearchSession;
+import com.trak.domain.repository.PageVisitRepository;
+import com.trak.service.ResearchGraphService;
 import com.trak.service.EventIngestionService;
 import com.trak.service.ResearchMemoryService;
 import com.trak.service.ResearchSessionService;
@@ -19,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -40,6 +43,12 @@ class SessionControllerTest {
 
     @Autowired
     private EventIngestionService eventIngestionService;
+
+    @Autowired
+    private PageVisitRepository pageVisitRepository;
+
+    @Autowired
+    private ResearchGraphService researchGraphService;
 
     @Test
     void createSession() throws Exception {
@@ -115,6 +124,26 @@ class SessionControllerTest {
             .andExpect(status().isOk())
             .andExpect(content().json("[]"));
     }
+
+            @Test
+            void graphRetrievalExcludesPageVisitBeforeSessionStart() {
+            ResearchSession session = sessionService.createSession("Session Isolation");
+            Instant oldTimestamp = session.getStartTime().minusSeconds(1);
+            PageVisit staleVisit = new PageVisit();
+            staleVisit.setSessionId(session.getId());
+            staleVisit.setUrl("https://www.google.com/search?q=old+session");
+            staleVisit.setTitle("Old session search");
+            staleVisit.setDomain("www.google.com");
+            staleVisit.setFirstVisited(oldTimestamp);
+            staleVisit.setLastVisited(oldTimestamp);
+            staleVisit.setVisitCount(1);
+            pageVisitRepository.save(staleVisit);
+
+            assertTrue(sessionService.getMindMap(session.getId()).nodes().stream()
+                .noneMatch(node -> staleVisit.getUrl().equals(node.url())));
+            assertTrue(researchGraphService.getGraph(session.getId()).nodes().stream()
+                .noneMatch(node -> staleVisit.getUrl().equals(node.metadata().get("url"))));
+            }
 
     // --- M4 Research Memory Tests ---
 

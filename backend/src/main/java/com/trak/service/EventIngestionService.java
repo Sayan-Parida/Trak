@@ -84,7 +84,8 @@ public class EventIngestionService {
                 event.setReferrerUrl(request.referrerUrl());
                 event.setTimestamp(timestamp);
 
-                if (sessionId != null && sessionDetector.isValidSessionEvent(sessionId, timestamp)) {
+                if (sessionId != null && PageVisitService.isResearchUrl(url)
+                        && sessionDetector.isValidSessionEvent(sessionId, timestamp)) {
                     event.setSessionId(sessionId);
                 }
 
