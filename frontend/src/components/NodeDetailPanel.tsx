@@ -169,9 +169,9 @@ export default function NodeDetailPanel({
               Path to this record ({connectedNodes.length})
             </span>
             <div className="space-y-1 max-h-36 overflow-y-auto">
-              {connectedNodes.map((cNode) => (
+              {connectedNodes.map((cNode, index) => (
                 <button
-                  key={cNode.id}
+                  key={`${cNode.id}-${cNode.relationship}-${index}`}
                   onClick={() => onSelectConnectedNode?.(cNode.id)}
                   className="w-full text-left p-2 rounded-[var(--radius-sm)] hover:bg-[var(--surface-hover)] border border-[var(--border-subtle)] transition-colors flex items-center justify-between group"
                 >

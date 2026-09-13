@@ -30,6 +30,8 @@ interface CustomNodeProps {
     typeBadgeBg?: string;
     typeBadgeFg?: string;
     typeBadgeLabel?: string;
+    compact?: boolean;
+    isLatest?: boolean;
   };
   selected?: boolean;
 }
@@ -46,7 +48,9 @@ const NodeWrapper = memo(({
   showTypeBadge,
   typeBadgeBg,
   typeBadgeFg,
-  typeBadgeLabel
+  typeBadgeLabel,
+  compact,
+  isLatest
 }: {
   children: React.ReactNode;
   selected?: boolean;
@@ -60,12 +64,14 @@ const NodeWrapper = memo(({
   typeBadgeBg?: string;
   typeBadgeFg?: string;
   typeBadgeLabel?: string;
+  compact?: boolean;
+  isLatest?: boolean;
 }) => {
   return (
     <div
-      className="pariet-node relative rounded-[var(--radius-md)] p-3 transition-all duration-150 cursor-pointer select-none border-l-2"
+      className={`pariet-node relative rounded-[var(--radius-md)] ${compact ? 'p-2.5' : 'p-3'} transition-all duration-150 cursor-pointer select-none border-l-2`}
       style={{
-        width: 250,
+        width: compact ? 205 : 250,
         backgroundColor: 'var(--surface-base)',
         borderTop: `1px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-subtle)'}`,
         borderRight: `1px solid ${selected || isFocused ? 'var(--accent)' : 'var(--border-subtle)'}`,
@@ -136,6 +142,11 @@ const NodeWrapper = memo(({
             {typeBadgeLabel}
           </span>
         )}
+        {isLatest && (
+          <span className="ml-auto text-[8px] font-semibold tracking-[0.08em] text-[var(--accent)]">
+            STOPPING POINT
+          </span>
+        )}
       </div>
 
       {children}
@@ -155,6 +166,8 @@ export const PaperNode = memo(({ data, selected }: CustomNodeProps) => {
       accentBg="var(--node-paper-bg)"
       typeLabel="Paper"
       icon={BookOpen}
+      compact={data.compact}
+      isLatest={data.isLatest}
     >
       <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] line-clamp-2 mb-2">
         {data.label}
@@ -184,6 +197,8 @@ export const PageNode = memo(({ data, selected }: CustomNodeProps) => {
       typeBadgeBg="var(--node-page)"
       typeBadgeFg="var(--text-primary)"
       typeBadgeLabel="PAGE"
+      compact={data.compact}
+      isLatest={data.isLatest}
     >
       <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] line-clamp-2 mb-2">
         {data.label}
@@ -208,6 +223,8 @@ export const ConceptNode = memo(({ data, selected }: CustomNodeProps) => {
       accentBg="var(--node-concept-bg)"
       typeLabel="Concept"
       icon={Sparkles}
+      compact={data.compact}
+      isLatest={data.isLatest}
     >
       <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] mb-2">
         {data.label}
@@ -238,6 +255,8 @@ export const SearchNode = memo(({ data, selected }: CustomNodeProps) => {
       typeBadgeBg="var(--node-search)"
       typeBadgeFg="var(--text-primary)"
       typeBadgeLabel="SEARCH"
+      compact={data.compact}
+      isLatest={data.isLatest}
     >
       <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] italic text-[var(--text-primary)] leading-[1.12] mb-2">
         &ldquo;{data.label}&rdquo;
@@ -262,6 +281,8 @@ export const InsightNode = memo(({ data, selected }: CustomNodeProps) => {
       accentBg="var(--node-insight-bg)"
       typeLabel="Synthesis"
       icon={Cpu}
+      compact={data.compact}
+      isLatest={data.isLatest}
     >
       <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] mb-2">
         {data.label}
@@ -310,6 +331,8 @@ export const nodeTypes = {
       accentBg="var(--node-concept-bg)"
       typeLabel="Session"
       icon={Compass}
+      compact={data.compact}
+      isLatest={data.isLatest}
     >
       <div style={{ fontFamily: 'var(--font-display)' }} className="text-[14px] font-semibold text-[var(--text-primary)] leading-[1.12] line-clamp-2 mb-2">
         {data.label}

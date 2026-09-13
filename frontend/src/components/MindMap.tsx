@@ -34,6 +34,21 @@ interface Props {
 const nodeWidth = 240;
 const nodeHeight = 100;
 const positionsKey = (sessionId: string) => `researchmind:node-positions:${sessionId}`;
+const pathwayRelationships = new Set(['SEARCH_TO_SEARCH', 'RESULTS_IN', 'PAGE_TO_PAGE', 'NAVIGATED_FROM']);
+const layoutRelationships = new Set(['SEARCH_TO_SEARCH', 'RESULTS_IN', 'PAGE_TO_PAGE', 'NAVIGATED_FROM']);
+
+const edgePriority = (relationship: string) => {
+  if (relationship === 'SEARCH_TO_SEARCH' || relationship === 'RESULTS_IN') return 'anchor';
+  if (pathwayRelationships.has(relationship)) return 'movement';
+  return 'context';
+};
+
+const edgeLabelOffset = (relationship: string) => {
+  if (relationship === 'SEARCH_TO_SEARCH') return -18;
+  if (relationship === 'RESULTS_IN') return 16;
+  if (relationship === 'PAGE_TO_PAGE' || relationship === 'NAVIGATED_FROM') return 22;
+  return -22;
+};
 
 type SavedPositions = Record<string, { x: number; y: number }>;
 
@@ -100,7 +115,8 @@ function ResearchEdge({
   markerEnd,
   style,
   label,
-  selected
+  selected,
+  data
 }: EdgeProps) {
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -113,20 +129,36 @@ function ResearchEdge({
     offset: 24
   });
   const [hovered, setHovered] = useState(false);
+  const priority = String(data?.priority || 'context');
+  const showLabel = priority === 'anchor' || hovered || selected;
+  const labelOffset = Number(data?.labelOffset || 0);
+  const active = hovered || selected;
 
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
-      {label && (
+      <BaseEdge
+        path={edgePath}
+        markerEnd={markerEnd}
+        interactionWidth={28}
+        style={{
+          ...style,
+          stroke: active ? 'var(--accent)' : priority === 'anchor' ? 'var(--node-search)' : 'var(--border-strong)',
+          strokeWidth: active || priority === 'anchor' ? 1.8 : 1,
+          opacity: active ? 1 : priority === 'anchor' ? 0.84 : priority === 'movement' ? 0.55 : 0.24
+        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      />
+      {label && showLabel && (
         <EdgeLabelRenderer>
           <div
             className="pointer-events-auto absolute rounded-[var(--radius-xs)] border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-[0.08em]"
             style={{
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY - 8}px)`,
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY + labelOffset}px)`,
               color: 'var(--text-secondary)',
               backgroundColor: 'var(--surface-base)',
               borderColor: selected || hovered ? 'var(--accent)' : 'var(--border-subtle)',
-              opacity: selected || hovered ? 1 : 0.82,
+              opacity: selected || hovered ? 1 : priority === 'anchor' ? 0.86 : 0.72,
               boxShadow: 'var(--shadow-xs)',
               zIndex: selected || hovered ? 3 : 1
             }}
@@ -172,6 +204,7 @@ function InnerMindMap({ sessionId }: Props) {
   const { fitView, zoomIn, zoomOut, setCenter, getZoom } = useReactFlow();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const savedPositionsRef = useRef<SavedPositions>({});
+  const resettingLayoutRef = useRef(false);
   const rawDataRef = useRef<{ nodes: MindMapNode[]; edges: MindMapEdge[] }>({ nodes: [], edges: [] });
 
   const loadGraph = useCallback(async () => {
@@ -181,13 +214,19 @@ function InnerMindMap({ sessionId }: Props) {
       rawDataRef.current = { nodes: data.nodes, edges: data.edges };
       const savedPositions = readSavedPositions(sessionId);
       savedPositionsRef.current = savedPositions;
+      const domainNodeIds = new Set(
+        data.nodes.filter((node) => node.type === 'DOMAIN').map((node) => node.id)
+      );
 
       const flowNodes: Node[] = data.nodes.map((n) => ({
         id: n.id,
         type: n.type,
+        hidden: n.type === 'DOMAIN',
         position: { x: 0, y: 0 },
         data: {
           ...n,
+          compact: data.nodes.length > 15 && n.type === 'PAGE',
+          isLatest: false,
           isDimmed: false,
           isFocused: false
         }
@@ -199,6 +238,12 @@ function InnerMindMap({ sessionId }: Props) {
         target: e.target,
         label: e.relationship.replace(/_/g, ' ').toLowerCase(),
         type: 'research',
+        data: {
+          priority: edgePriority(e.relationship),
+          relationship: e.relationship,
+          labelOffset: edgeLabelOffset(e.relationship)
+        },
+        hidden: domainNodeIds.has(e.source) || domainNodeIds.has(e.target),
         markerEnd: {
           type: MarkerType.ArrowClosed,
           width: 10,
@@ -207,11 +252,21 @@ function InnerMindMap({ sessionId }: Props) {
         }
       }));
 
-      const { nodes: autoLayoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      const latestNode = data.nodes
+        .filter((node) => node.type !== 'SESSION' && node.type !== 'DOMAIN' && node.timestamp)
+        .sort((left, right) => new Date(right.timestamp!).getTime() - new Date(left.timestamp!).getTime())[0];
+      if (latestNode) {
+        flowNodes.forEach((node) => {
+          node.data = { ...node.data, isLatest: node.id === latestNode.id };
+        });
+      }
+
+      const { nodes: autoLayoutedNodes } = getLayoutedElements(
         flowNodes, 
-        flowEdges, 
+        flowEdges.filter((edge) => layoutRelationships.has(String(edge.data?.relationship))), 
         layoutDirection
       );
+      const layoutedEdges = flowEdges;
       const layoutedNodes = autoLayoutedNodes.map((node) => ({
         ...node,
         position: savedPositions[node.id] || node.position
@@ -266,22 +321,32 @@ function InnerMindMap({ sessionId }: Props) {
   const toggleLayout = useCallback(() => {
     const nextDir = layoutDirection === 'LR' ? 'TB' : 'LR';
     setLayoutDirection(nextDir);
-    const { nodes: newNodes, edges: newEdges } = getLayoutedElements(nodes, edges, nextDir);
+    const { nodes: autoLayoutedNodes, edges: newEdges } = getLayoutedElements(nodes, edges, nextDir);
+    const newNodes = autoLayoutedNodes.map((node) => ({
+      ...node,
+      position: savedPositionsRef.current[node.id] || node.position
+    }));
     setNodes(newNodes);
     setEdges(newEdges);
     setTimeout(() => fitView({ padding: 0.05, duration: 250 }), 50);
   }, [layoutDirection, nodes, edges, setNodes, setEdges, fitView]);
 
   const resetLayout = useCallback(() => {
+    resettingLayoutRef.current = true;
     localStorage.removeItem(positionsKey(sessionId));
     savedPositionsRef.current = {};
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges, layoutDirection);
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
-    requestAnimationFrame(() => fitView({ padding: 0.05, duration: 250 }));
+    requestAnimationFrame(() => {
+      localStorage.removeItem(positionsKey(sessionId));
+      resettingLayoutRef.current = false;
+      fitView({ padding: 0.05, duration: 250 });
+    });
   }, [sessionId, nodes, edges, layoutDirection, setNodes, setEdges, fitView]);
 
   const handleNodeDragStop = useCallback((_: MouseEvent | TouchEvent, node: Node) => {
+    if (resettingLayoutRef.current) return;
     const nextPositions = {
       ...savedPositionsRef.current,
       [node.id]: { x: node.position.x, y: node.position.y }
@@ -311,7 +376,12 @@ function InnerMindMap({ sessionId }: Props) {
         }
       }))
     );
-  }, [edges, setNodes]);
+
+    setEdges((current) => current.map((edge) => ({
+      ...edge,
+      selected: edge.source === node.id || edge.target === node.id
+    })));
+  }, [edges, setEdges, setNodes]);
 
   const onPaneClick = useCallback(() => {
     setSelectedNodeData(null);
@@ -325,7 +395,8 @@ function InnerMindMap({ sessionId }: Props) {
         }
       }))
     );
-  }, [setNodes]);
+    setEdges((current) => current.map((edge) => ({ ...edge, selected: false })));
+  }, [setEdges, setNodes]);
 
   // Node filtering
   useEffect(() => {
@@ -334,6 +405,7 @@ function InnerMindMap({ sessionId }: Props) {
         const matchesFilter = activeFilter === 'ALL' || n.type === activeFilter;
         return {
           ...n,
+          hidden: n.type === 'DOMAIN' && activeFilter !== 'DOMAIN',
           data: {
             ...n.data,
             isDimmed: !matchesFilter
@@ -341,7 +413,12 @@ function InnerMindMap({ sessionId }: Props) {
         };
       })
     );
-  }, [activeFilter, setNodes]);
+    setEdges((current) => current.map((edge) => ({
+      ...edge,
+      hidden: (edge.source.startsWith('domain:') || edge.target.startsWith('domain:'))
+        && activeFilter !== 'DOMAIN'
+    })));
+  }, [activeFilter, setEdges, setNodes]);
 
   // Connected nodes calculation
   const connectedNodesForSelected = useMemo(() => {
@@ -441,6 +518,10 @@ function InnerMindMap({ sessionId }: Props) {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeDragStop={handleNodeDragStop}
+          onEdgeClick={(_, edge) => setEdges((current) => current.map((item) => ({
+            ...item,
+            selected: item.id === edge.id
+          })))}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
           onMove={handleViewportChange}

@@ -95,7 +95,8 @@ export const MapControls = ({
                 { key: 'SOURCE_PAPER', label: 'Papers' },
                 { key: 'CONCEPT', label: 'Concepts' },
                 { key: 'AI_INSIGHT', label: 'Syntheses' },
-                { key: 'SEARCH', label: 'Queries' }
+                { key: 'SEARCH', label: 'Queries' },
+                { key: 'DOMAIN', label: 'Domains' }
               ].map((item) => (
                 <button
                   key={item.key}
