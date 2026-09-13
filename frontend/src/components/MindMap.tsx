@@ -8,6 +8,10 @@ import {
   useNodesInitialized,
   useReactFlow,
   ReactFlowProvider,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
+  EdgeProps,
   Node,
   Edge,
   MarkerType
@@ -29,6 +33,22 @@ interface Props {
 
 const nodeWidth = 240;
 const nodeHeight = 100;
+const positionsKey = (sessionId: string) => `researchmind:node-positions:${sessionId}`;
+
+type SavedPositions = Record<string, { x: number; y: number }>;
+
+const readSavedPositions = (sessionId: string): SavedPositions => {
+  try {
+    const value = localStorage.getItem(positionsKey(sessionId));
+    return value ? JSON.parse(value) as SavedPositions : {};
+  } catch {
+    return {};
+  }
+};
+
+const writeSavedPositions = (sessionId: string, positions: SavedPositions) => {
+  localStorage.setItem(positionsKey(sessionId), JSON.stringify(positions));
+};
 
 const getLayoutedElements = (
   nodes: Node[], 
@@ -70,7 +90,60 @@ const getLayoutedElements = (
   return { nodes: newNodes, edges };
 };
 
-function ViewportFitter({ nodeCount, edgeCount }: { nodeCount: number; edgeCount: number }) {
+function ResearchEdge({
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  markerEnd,
+  style,
+  label,
+  selected
+}: EdgeProps) {
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+    borderRadius: 10,
+    offset: 24
+  });
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <>
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      {label && (
+        <EdgeLabelRenderer>
+          <div
+            className="pointer-events-auto absolute rounded-[var(--radius-xs)] border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-[0.08em]"
+            style={{
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY - 8}px)`,
+              color: 'var(--text-secondary)',
+              backgroundColor: 'var(--surface-base)',
+              borderColor: selected || hovered ? 'var(--accent)' : 'var(--border-subtle)',
+              opacity: selected || hovered ? 1 : 0.82,
+              boxShadow: 'var(--shadow-xs)',
+              zIndex: selected || hovered ? 3 : 1
+            }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+          >
+            {String(label)}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+}
+
+const edgeTypes = { research: ResearchEdge };
+
+function ViewportFitter({ nodeCount }: { nodeCount: number }) {
   const { fitView } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
 
@@ -80,7 +153,7 @@ function ViewportFitter({ nodeCount, edgeCount }: { nodeCount: number; edgeCount
       fitView({ padding: 0.05, duration: 300 });
     });
     return () => cancelAnimationFrame(frame);
-  }, [nodeCount, edgeCount, nodesInitialized, fitView]);
+  }, [nodeCount, nodesInitialized, fitView]);
 
   return null;
 }
@@ -97,6 +170,8 @@ function InnerMindMap({ sessionId }: Props) {
   const [zoomLevel, setZoomLevel] = useState(1);
 
   const { fitView, zoomIn, zoomOut, setCenter, getZoom } = useReactFlow();
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const savedPositionsRef = useRef<SavedPositions>({});
   const rawDataRef = useRef<{ nodes: MindMapNode[]; edges: MindMapEdge[] }>({ nodes: [], edges: [] });
 
   const loadGraph = useCallback(async () => {
@@ -104,6 +179,8 @@ function InnerMindMap({ sessionId }: Props) {
       setLoading(true);
       const data = await apiClient.getMindMap(sessionId);
       rawDataRef.current = { nodes: data.nodes, edges: data.edges };
+      const savedPositions = readSavedPositions(sessionId);
+      savedPositionsRef.current = savedPositions;
 
       const flowNodes: Node[] = data.nodes.map((n) => ({
         id: n.id,
@@ -116,12 +193,12 @@ function InnerMindMap({ sessionId }: Props) {
         }
       }));
 
-      const flowEdges: Edge[] = data.edges.map((e) => ({
-        id: e.id || `edge-${e.source}-${e.target}`,
+      const flowEdges: Edge[] = data.edges.map((e, index) => ({
+        id: `${e.id || `edge-${e.source}-${e.target}`}-${index}`,
         source: e.source,
         target: e.target,
         label: e.relationship.replace(/_/g, ' ').toLowerCase(),
-        type: 'smoothstep',
+        type: 'research',
         markerEnd: {
           type: MarkerType.ArrowClosed,
           width: 10,
@@ -130,11 +207,15 @@ function InnerMindMap({ sessionId }: Props) {
         }
       }));
 
-      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      const { nodes: autoLayoutedNodes, edges: layoutedEdges } = getLayoutedElements(
         flowNodes, 
         flowEdges, 
         layoutDirection
       );
+      const layoutedNodes = autoLayoutedNodes.map((node) => ({
+        ...node,
+        position: savedPositions[node.id] || node.position
+      }));
 
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);
@@ -145,6 +226,27 @@ function InnerMindMap({ sessionId }: Props) {
       setLoading(false);
     }
   }, [sessionId, layoutDirection, setNodes, setEdges]);
+
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container || typeof ResizeObserver === 'undefined') return;
+
+    let frame = 0;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width <= 0 || height <= 0) return;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        fitView({ padding: 0.05, duration: 0 });
+      });
+    });
+    observer.observe(container);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [fitView]);
 
   useEffect(() => {
     loadGraph();
@@ -169,6 +271,24 @@ function InnerMindMap({ sessionId }: Props) {
     setEdges(newEdges);
     setTimeout(() => fitView({ padding: 0.05, duration: 250 }), 50);
   }, [layoutDirection, nodes, edges, setNodes, setEdges, fitView]);
+
+  const resetLayout = useCallback(() => {
+    localStorage.removeItem(positionsKey(sessionId));
+    savedPositionsRef.current = {};
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges, layoutDirection);
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+    requestAnimationFrame(() => fitView({ padding: 0.05, duration: 250 }));
+  }, [sessionId, nodes, edges, layoutDirection, setNodes, setEdges, fitView]);
+
+  const handleNodeDragStop = useCallback((_: MouseEvent | TouchEvent, node: Node) => {
+    const nextPositions = {
+      ...savedPositionsRef.current,
+      [node.id]: { x: node.position.x, y: node.position.y }
+    };
+    savedPositionsRef.current = nextPositions;
+    writeSavedPositions(sessionId, nextPositions);
+  }, [sessionId]);
 
   // Focus Mode
   const onNodeClick = useCallback((_: any, node: Node) => {
@@ -308,7 +428,7 @@ function InnerMindMap({ sessionId }: Props) {
   }
 
   return (
-    <div className="w-full h-full relative select-none">
+    <div ref={mapContainerRef} className="w-full h-full min-w-0 min-h-0 relative select-none">
       {nodes.filter((n) => n.type !== 'SESSION').length === 0 ? (
         <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-xs text-[var(--text-muted)] select-none">
           <span className="font-medium text-[var(--text-secondary)] mb-1">This session doesn&apos;t have enough research activity to build a map yet.</span>
@@ -320,17 +440,19 @@ function InnerMindMap({ sessionId }: Props) {
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onNodeDragStop={handleNodeDragStop}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
           onMove={handleViewportChange}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           minZoom={0.5}
           maxZoom={2.5}
           fitView
           fitViewOptions={{ padding: 0.05 }}
           proOptions={{ hideAttribution: true }}
         >
-          <ViewportFitter nodeCount={nodes.length} edgeCount={edges.length} />
+          <ViewportFitter nodeCount={nodes.length} />
           
           <Background 
             gap={20} 
@@ -370,7 +492,7 @@ function InnerMindMap({ sessionId }: Props) {
             onZoomIn={() => zoomIn({ duration: 200 })}
             onZoomOut={() => zoomOut({ duration: 200 })}
             onFitView={() => fitView({ padding: 0.05, duration: 250 })}
-            onResetView={() => fitView({ padding: 0.05, duration: 250 })}
+            onResetLayout={resetLayout}
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
             layoutDirection={layoutDirection}

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { shortcutLabel } from '../utils/platform';
 import { 
   Network, 
   Clock, 
@@ -132,11 +133,11 @@ export default function Navbar({
         <button
           onClick={onFocusSearch}
           className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-sm)] text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] border border-[var(--border-subtle)] transition-colors"
-          title="Search or research (⌘K)"
+          title={`Search or research (${shortcutLabel('K')})`}
         >
           <Search className="w-3 h-3" />
           <span className="hidden sm:inline text-[11px]">Command</span>
-          <kbd className="font-mono text-[10px] text-[var(--text-faint)] bg-[var(--surface-subtle)] px-1 rounded">⌘K</kbd>
+          <kbd className="font-mono text-[10px] text-[var(--text-faint)] bg-[var(--surface-subtle)] px-1 rounded">{shortcutLabel('K')}</kbd>
         </button>
 
         <button

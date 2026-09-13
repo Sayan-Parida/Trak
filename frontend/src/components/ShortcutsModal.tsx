@@ -1,12 +1,13 @@
 import { X } from 'lucide-react';
+import { shortcutLabel } from '../utils/platform';
 
 interface Props {
   onClose: () => void;
 }
 
-const SHORTCUTS = [
-  { key: '⌘ / Ctrl + K', description: 'Focus command search bar' },
-  { key: '⌘ / Ctrl + B', description: 'Toggle left workspace sidebar' },
+const getShortcuts = () => [
+  { key: shortcutLabel('K'), description: 'Focus command search bar' },
+  { key: shortcutLabel('B'), description: 'Toggle left workspace sidebar' },
   { key: 'F', description: 'Fit research graph to screen' },
   { key: 'Space + Drag', description: 'Pan knowledge graph canvas' },
   { key: 'Scroll Wheel', description: 'Zoom in / zoom out' },
@@ -14,6 +15,8 @@ const SHORTCUTS = [
 ];
 
 export default function ShortcutsModal({ onClose }: Props) {
+  const shortcuts = getShortcuts();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs select-none">
       <div 
@@ -36,7 +39,7 @@ export default function ShortcutsModal({ onClose }: Props) {
         </div>
 
         <div className="p-3 divide-y divide-[var(--border-subtle)] text-xs">
-          {SHORTCUTS.map((s, i) => (
+          {shortcuts.map((s, i) => (
             <div key={i} className="py-2 flex items-center justify-between">
               <span className="text-[var(--text-secondary)]">{s.description}</span>
               <kbd className="px-1.5 py-0.5 rounded font-mono text-[10px] text-[var(--text-primary)] bg-[var(--surface-subtle)] border border-[var(--border-subtle)]">

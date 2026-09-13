@@ -10,6 +10,7 @@ import {
 import { Session, SessionStatus } from '../types';
 import { apiClient } from '../api/client';
 import { researchStore } from '../api/researchStore';
+import { shortcutLabel } from '../utils/platform';
 
 const formatArchiveDate = (value: string) => new Intl.DateTimeFormat(undefined, {
   month: 'short',
@@ -94,7 +95,7 @@ export default function SessionList({
       >
         <button
           onClick={onToggleCollapse}
-          title="Expand Workspaces (⌘B)"
+          title={`Expand Workspaces (${shortcutLabel('B')})`}
           className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] mb-2 transition-colors"
         >
           <ChevronRight className="w-4 h-4" />
@@ -120,7 +121,7 @@ export default function SessionList({
                   : 'text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'
               }`}
             >
-              {session.title.slice(0, 2).toUpperCase()}
+              {(session.title || 'Untitled').slice(0, 2).toUpperCase()}
             </button>
           ))}
         </div>
@@ -162,7 +163,7 @@ export default function SessionList({
 
           <button
             onClick={onToggleCollapse}
-            title="Collapse Sidebar (⌘B)"
+            title={`Collapse Sidebar (${shortcutLabel('B')})`}
             className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
           >
             <ChevronLeft className="w-3.5 h-3.5" />

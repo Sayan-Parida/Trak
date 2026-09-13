@@ -17,7 +17,7 @@ interface MapControlsProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onFitView: () => void;
-  onResetView: () => void;
+  onResetLayout: () => void;
   activeFilter: NodeType | 'ALL';
   onFilterChange: (filter: NodeType | 'ALL') => void;
   layoutDirection: 'LR' | 'TB';
@@ -34,7 +34,7 @@ export const MapControls = ({
   onZoomIn,
   onZoomOut,
   onFitView,
-  onResetView,
+  onResetLayout,
   activeFilter,
   onFilterChange,
   layoutDirection,
@@ -172,8 +172,8 @@ export const MapControls = ({
         </button>
 
         <button
-          onClick={onResetView}
-          title="Recenter Canvas"
+          onClick={onResetLayout}
+          title="Reset node layout"
           className="p-1 rounded hover:bg-[var(--surface-hover)] text-[var(--text-secondary)]"
         >
           <RotateCcw className="w-3.5 h-3.5" />
