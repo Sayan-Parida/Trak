@@ -1,6 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { 
-  Plus, 
   Compass, 
   ArrowRight,
   MapPinned
@@ -11,10 +10,9 @@ import MindMap from './components/MindMap';
 import Timeline from './components/Timeline';
 import PagesView from './components/PagesView';
 import ResearchSearch from './components/ResearchSearch';
-import NewSessionModal from './components/NewSessionModal';
 import ShortcutsModal from './components/ShortcutsModal';
 import ResumePanel from './components/ResumePanel';
-import { Theme, Session } from './types';
+import { Session } from './types';
 import { apiClient } from './api/client';
 import { researchStore } from './api/researchStore';
 
@@ -37,18 +35,10 @@ export default function App() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'mindmap' | 'timeline' | 'pages'>('mindmap');
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('researchmind-theme') as Theme) || 'light');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [showNewSessionModal, setShowNewSessionModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
-
-// Sync theme with DOM and localStorage
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem('researchmind-theme', theme);
-  }, [theme]);
 
   // Load sessions
   const loadSessions = useCallback(async () => {
@@ -83,7 +73,6 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
         e.preventDefault();
         setIsSidebarCollapsed(prev => !prev);
       } else if (e.key === 'Escape') {
-        setShowNewSessionModal(false);
         setShowShortcutsModal(false);
         setIsSearchOpen(false);
       }
@@ -93,6 +82,13 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
   }, []);
 
   const activeSession = sessions.find((s) => s.id === selectedSessionId);
+
+  // Keep the last known session so the header shell stays mounted (and keeps its
+  // previous content) during the brief window where a session switch triggers a
+  // re-fetch. Prevents any mid-switch collapse/resize of the header.
+  const lastSessionRef = useRef<Session | null>(null);
+  if (activeSession) lastSessionRef.current = activeSession;
+  const headerSession = activeSession ?? lastSessionRef.current;
 
   const handleViewPath = useCallback((nodeId: string) => {
     setFocusNodeId(nodeId);
@@ -107,7 +103,6 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
         onSelectSession={setSelectedSessionId}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        onOpenNewSessionModal={() => setShowNewSessionModal(true)}
       />
 
       {/* Main App Workspace Shell */}
@@ -117,10 +112,7 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
           activeSession={activeSession}
           activeTab={activeTab}
           onChangeTab={setActiveTab}
-          theme={theme}
-          onChangeTheme={setTheme}
           onOpenShortcuts={() => setShowShortcutsModal(true)}
-          onOpenNewSession={() => setShowNewSessionModal(true)}
           onFocusSearch={() => setIsSearchOpen(true)}
         />
 
@@ -141,58 +133,50 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
           </div>
         )}
 
-        {activeSession && (
-          <section className="shrink-0 relative bg-[var(--surface-base)] px-6 lg:px-10 pt-4 pb-4 border-b-2 border-[var(--border-strong)]">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              {/* Left: RESEARCH SESSION status + title */}
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="b-tag b-tag--accent">
-                    <MapPinned className="w-2.5 h-2.5" />
-                    Research session
-                  </span>
-                  <span
-                    className={`b-live ${activeSession.status === 'ACTIVE' ? 'b-live--on' : ''}`}
-                    style={{ background: activeSession.status === 'ACTIVE' ? 'var(--status-active)' : 'var(--status-muted)' }}
-                  />
-                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                    {activeSession.status}
-                    {activeSession.status === 'ACTIVE' ? ' • live trail' : ''}
-                  </span>
-                </div>
-
-                <h1 style={{ fontFamily: 'var(--font-display)' }} className="min-w-0 truncate text-xl font-bold leading-none tracking-[-0.02em] text-[var(--text-primary)] sm:text-2xl">
-                  {activeSession.title}
-                </h1>
+        {selectedSessionId && headerSession && (
+          <section className="shrink-0 relative bg-[var(--surface-base)] px-4 lg:px-6 py-2 border-b-2 border-[var(--border-strong)]">
+            <div className="flex items-center gap-3 min-h-[44px]">
+              {/* Left: Research session badge + status (session name lives in the top breadcrumb) */}
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="b-tag b-tag--accent">
+                  <MapPinned className="w-2.5 h-2.5" />
+                  Research session
+                </span>
+                <span
+                  className={`b-live ${headerSession.status === 'ACTIVE' ? 'b-live--on' : ''}`}
+                  style={{ background: headerSession.status === 'ACTIVE' ? 'var(--status-active)' : 'var(--status-muted)' }}
+                />
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  {headerSession.status}
+                  {headerSession.status === 'ACTIVE' ? ' • live trail' : ''}
+                </span>
               </div>
 
-              {/* Middle: editorial stat blocks centered in the open middle band */}
-              <div className="mx-auto flex flex-wrap items-center gap-2">
-                <div className="flex flex-col gap-1 border-2 border-[var(--accent)] bg-[var(--accent-subtle)] rounded-[var(--radius-sm)] px-2.5 py-1.5 min-w-[86px]">
+              {/* Center: compact single-line session stats */}
+              <div className="mx-auto flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 border-2 border-[var(--accent)] bg-[var(--accent-subtle)] rounded-[var(--radius-sm)] px-2 py-1">
                   <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Started</span>
-                  <span className="font-mono text-xs font-bold text-[var(--text-primary)]">{formatSessionDate(activeSession.startTime)}</span>
+                  <span className="font-mono text-[11px] font-bold text-[var(--text-primary)] min-w-[5.5rem]">{formatSessionDate(headerSession.startTime)}</span>
                 </div>
-                <div className="flex flex-col gap-1 border-2 border-[var(--border-medium)] bg-[var(--surface-elevated)] rounded-[var(--radius-sm)] px-2.5 py-1.5 min-w-[86px]">
+                <div className="flex items-center gap-1.5 border-2 border-[var(--border-medium)] bg-[var(--surface-elevated)] rounded-[var(--radius-sm)] px-2 py-1">
                   <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-faint)]">Duration</span>
-                  <span className="font-mono text-xs font-bold text-[var(--text-primary)]">{formatSessionDuration(activeSession.startTime, activeSession.endTime)}</span>
+                  <span className="font-mono text-[11px] font-bold text-[var(--text-primary)] min-w-[4.75rem]">{formatSessionDuration(headerSession.startTime, headerSession.endTime)}</span>
                 </div>
-                <div className="flex flex-col gap-1 border-2 border-[var(--accent-warm)] bg-[var(--accent-warm-subtle)] rounded-[var(--radius-sm)] px-2.5 py-1.5 min-w-[86px]">
+                <div className="flex items-center gap-1.5 border-2 border-[var(--accent-warm)] bg-[var(--accent-warm-subtle)] rounded-[var(--radius-sm)] px-2 py-1">
                   <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Searches</span>
-                  <span className="font-mono text-xs font-bold text-[var(--text-primary)]">{activeSession.searchCount}</span>
+                  <span className="font-mono text-[11px] font-bold text-[var(--text-primary)] min-w-[0.75rem]">{headerSession.searchCount}</span>
                 </div>
-                <div className="flex flex-col gap-1 border-2 border-[var(--node-page)] bg-[var(--node-page-bg)] rounded-[var(--radius-sm)] px-2.5 py-1.5 min-w-[86px]">
+                <div className="flex items-center gap-1.5 border-2 border-[var(--node-page)] bg-[var(--node-page-bg)] rounded-[var(--radius-sm)] px-2 py-1 hidden md:flex">
                   <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Pages</span>
-                  <span className="font-mono text-xs font-bold text-[var(--text-primary)]">{activeSession.pageCount}</span>
+                  <span className="font-mono text-[11px] font-bold text-[var(--text-primary)] min-w-[0.75rem]">{headerSession.pageCount}</span>
                 </div>
               </div>
 
-              {/* Right: RESUME RESEARCH pinned upper-right */}
+              {/* Right: compact Resume Research card */}
               <div className="hidden shrink-0 lg:block">
-                <ResumePanel sessionId={activeSession.id} onViewPath={handleViewPath} />
+                <ResumePanel sessionId={headerSession.id} onViewPath={handleViewPath} />
               </div>
             </div>
-            {/* Stripe accent above the bottom rule */}
-            <div className="stripes-accent absolute bottom-0 left-0 right-0 h-[5px]" />
           </section>
         )}
 
@@ -245,21 +229,15 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
                   ))}
                 </div>
               </div>
-
-              <button
-                onClick={() => setShowNewSessionModal(true)}
-                className="b-btn b-btn--accent text-sm px-4 py-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>New Workspace</span>
-              </button>
             </div>
           ) : (
             /* Active Views */
             <div key={activeTab} className="view-enter w-full h-full">
               {activeTab === 'mindmap' && (
                 <MindMap
+                  key={selectedSessionId}
                   sessionId={selectedSessionId}
+                  session={activeSession}
                   focusNodeId={focusNodeId}
                   onFocusNodeConsumed={() => setFocusNodeId(null)}
                 />
@@ -277,17 +255,6 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
           )}
         </div>
       </main>
-
-      {/* New Session Modal */}
-      {showNewSessionModal && (
-        <NewSessionModal
-          onClose={() => setShowNewSessionModal(false)}
-          onCreated={(newId) => {
-            setSelectedSessionId(newId);
-            setActiveTab('mindmap');
-          }}
-        />
-      )}
 
       {/* Shortcuts Guide Modal */}
       {showShortcutsModal && (

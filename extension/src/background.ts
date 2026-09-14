@@ -246,5 +246,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.type === 'RESTORE_TABS') {
     restoreTabs(message.urls || [], message.focusUrl ?? null).then((response) => sendResponse(response));
     return true;
+  } else if (message.type === 'CLEAR_SESSION_STATE') {
+    chrome.storage.local.set({ sessionState: { sessionId: null, sessionTitle: null, isActive: false } as SessionState })
+      .then(() => sendResponse({ success: true }));
+    return true;
+  } else if (message.type === 'SET_SESSION_STATE') {
+    chrome.storage.local.set({
+      sessionState: { sessionId: message.sessionId, sessionTitle: message.sessionTitle ?? null, isActive: true } as SessionState
+    }).then(() => sendResponse({ success: true }));
+    return true;
   }
 });

@@ -13,7 +13,6 @@ export const INITIAL_SESSIONS: Session[] = [
     searchCount: 7,
     entityCount: 24,
     tags: ['Quantum Chemistry', 'Drug Design', 'VQE', 'Bioinformatics'],
-    favorite: true
   },
   {
     id: 'session-neuromorphic-ai',
@@ -27,7 +26,6 @@ export const INITIAL_SESSIONS: Session[] = [
     searchCount: 5,
     entityCount: 18,
     tags: ['Neuromorphic', 'SNN', 'Hardware', 'Bio-inspired'],
-    favorite: true
   },
   {
     id: 'session-agent-alignment',
@@ -41,7 +39,6 @@ export const INITIAL_SESSIONS: Session[] = [
     searchCount: 4,
     entityCount: 15,
     tags: ['AI Safety', 'Formal Verification', 'Mechanistic Interp'],
-    favorite: false
   },
   {
     id: 'session-crispr-base-edit',
@@ -55,7 +52,6 @@ export const INITIAL_SESSIONS: Session[] = [
     searchCount: 3,
     entityCount: 14,
     tags: ['Genomics', 'CRISPR', 'Epigenetics'],
-    favorite: false
   }
 ];
 

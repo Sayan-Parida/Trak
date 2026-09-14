@@ -86,5 +86,25 @@ export const api = {
     } catch {
       return false;
     }
+  },
+
+  async getSession(sessionId: string): Promise<{ id: string; title: string | null; status: string } | null> {
+    try {
+      const res = await fetchWithTimeout(`${BASE_URL}/api/sessions/${sessionId}`, { method: 'GET' });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async listSessions(): Promise<Array<{ id: string; title: string | null; status: string }>> {
+    try {
+      const res = await fetchWithTimeout(`${BASE_URL}/api/sessions`, { method: 'GET' });
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   }
 };

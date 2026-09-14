@@ -79,6 +79,16 @@ public class ResearchSessionService {
         return sessionRepository.save(session);
     }
 
+    @Transactional
+    public void deleteSession(String id) {
+        ResearchSession session = getSession(id);
+        searchIndexService.removeSession(id);
+        eventRepository.deleteAll(eventRepository.findBySessionId(id));
+        pageVisitRepository.deleteAll(pageVisitRepository.findBySessionId(id));
+        searchQueryRepository.deleteAll(searchQueryRepository.findBySessionId(id));
+        sessionRepository.delete(session);
+    }
+
     public List<TimelineEntryResponse> getTimeline(String sessionId) {
         if (!sessionRepository.existsById(sessionId)) {
             throw new ResourceNotFoundException("Session not found");

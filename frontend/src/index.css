@@ -6,13 +6,10 @@
 
 /* -------------------------------------------------------------
    PARIET DESIGN SYSTEM
-   Mode: Neo-brutalist research instrument.
+   Mode: Neo-brutalist research instrument. Dark mode only.
    Palette: hot pink (primary), sunshine yellow (secondary),
    mint green (accent), orange (highlight),
-   near-black ink (text/borders), subtle warm paper (light mode),
-   neutral charcoal (dark mode).
-   The light and dark themes share ONE accent identity; dark mode
-   is simply the design system inverted onto a neutral base.
+   near-black ink (text/borders) on a neutral charcoal base.
    ------------------------------------------------------------- */
 
 :root {
@@ -21,78 +18,7 @@
   --font-display: "Space Grotesk", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
 
-  /* LIGHT THEME (Subtle warm paper, white surfaces, near-black ink) */
-  --ink: #14140f;
-  --shadow-ink: rgba(20, 20, 15, 1);
-
-  --bg-app: #f4f3ef;
-  --surface-base: #ffffff;
-  --surface-elevated: #ffffff;
-  --surface-subtle: #ebeae3;
-  --surface-hover: #efeee8;
-  --surface-selected: #ffe2ef;
-
-  --border-subtle: #dbd8d0;
-  --border-medium: #a8a6a0;
-  --border-strong: #14140f;
-  --border-focus: #14140f;
-
-  --text-primary: #14140f;
-  --text-secondary: #46463f;
-  --text-muted: #77776e;
-  --text-faint: #a2a098;
-
-  /* Palette accents */
-  --accent: #ff3d8e;             /* hot pink — primary */
-  --accent-hover: #e02278;
-  --accent-subtle: #ffdff0;
-  --accent-warm: #ff8a00;        /* orange — highlight */
-  --accent-warm-subtle: #ffe9cf;
-  --accent-yellow: #ffd21e;      /* sunshine yellow — secondary */
-  --accent-yellow-subtle: #fff3c4;
-
-  --status-active: #16c587;      /* mint green — accent */
-  --status-active-subtle: #d5f6e7;
-  --status-muted: #77776e;
-  --status-warning: #ff8a00;
-  --status-danger: #ff2444;
-
-  /* Graph Canvas */
-  --graph-bg: #f4f3ef;
-  --graph-dot: #d5d3cb;
-  --graph-edge: #9a9a94;
-  --graph-edge-highlight: #14140f;
-
-  /* Node Types */
-  --node-session: #d2266e;
-  --node-session-bg: #ffe0ee;
-  --node-search: #ea6f00;
-  --node-search-bg: #ffe9cd;
-  --node-page: #a06a00;
-  --node-page-bg: #fff3c4;
-  --node-paper: #089b66;
-  --node-paper-bg: #d3f5e5;
-  --node-concept: #c04013;
-  --node-concept-bg: #fbe0cf;
-  --node-insight: #14140f;
-  --node-insight-bg: #eceae3;
-  --node-domain: #8b8980;
-
-  /* Hard offset shadows (no blur) */
-  --shadow-xs: 2px 2px 0 var(--shadow-ink);
-  --shadow-sm: 3px 3px 0 var(--shadow-ink);
-  --shadow-md: 4px 4px 0 var(--shadow-ink);
-  --shadow-panel: 6px 6px 0 var(--shadow-ink);
-
-  /* Radius Scale (near-sharp geometry) */
-  --radius-xs: 1px;
-  --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 4px;
-}
-
-/* DARK THEME (Neutral charcoal base, inverted light-mode identity) */
-:root[data-theme="dark"] {
+  /* DARK THEME ONLY (Neutral charcoal base) */
   --ink: #1a1a18;
   --shadow-ink: rgba(0, 0, 0, 0.85);
 
@@ -113,25 +39,28 @@
   --text-muted: #a8a8a0;
   --text-faint: #6c6c68;
 
-  --accent: #ff5ca8;
+  /* Palette accents */
+  --accent: #ff5ca8;             /* hot pink — primary */
   --accent-hover: #ff79bc;
   --accent-subtle: #3c1a2c;
-  --accent-warm: #ff9a3c;
+  --accent-warm: #ff9a3c;        /* orange — highlight */
   --accent-warm-subtle: #35240f;
-  --accent-yellow: #ffd93a;
+  --accent-yellow: #ffd93a;      /* sunshine yellow — secondary */
   --accent-yellow-subtle: #38300a;
 
-  --status-active: #2fe0a0;
+  --status-active: #2fe0a0;      /* mint green — accent */
   --status-active-subtle: #0f3326;
   --status-muted: #a8a8a0;
   --status-warning: #ff9a3c;
   --status-danger: #ff5a6b;
 
+  /* Graph Canvas */
   --graph-bg: #111111;
   --graph-dot: #2c2c2a;
   --graph-edge: #555550;
   --graph-edge-highlight: #f0f0ec;
 
+  /* Node Types */
   --node-session: #ff6cb4;
   --node-session-bg: #3a1530;
   --node-search: #ffa650;
@@ -146,72 +75,17 @@
   --node-insight-bg: #2c2c29;
   --node-domain: #8a8a86;
 
+  /* Hard offset shadows (no blur) */
   --shadow-xs: 2px 2px 0 var(--shadow-ink);
   --shadow-sm: 3px 3px 0 var(--shadow-ink);
   --shadow-md: 4px 4px 0 var(--shadow-ink);
   --shadow-panel: 6px 6px 0 var(--shadow-ink);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="system"] {
-    --ink: #1a1a18;
-    --shadow-ink: rgba(0, 0, 0, 0.85);
-
-    --bg-app: #111111;
-    --surface-base: #181818;
-    --surface-elevated: #202020;
-    --surface-subtle: #141414;
-    --surface-hover: #262626;
-    --surface-selected: #3a1b2c;
-
-    --border-subtle: #2e2e2e;
-    --border-medium: #4a4a48;
-    --border-strong: #e6e6e6;
-    --border-focus: #e6e6e6;
-
-    --text-primary: #f5f5f0;
-    --text-secondary: #c4c4be;
-    --text-muted: #a8a8a0;
-    --text-faint: #6c6c68;
-
-    --accent: #ff5ca8;
-    --accent-hover: #ff79bc;
-    --accent-subtle: #3c1a2c;
-    --accent-warm: #ff9a3c;
-    --accent-warm-subtle: #35240f;
-    --accent-yellow: #ffd93a;
-    --accent-yellow-subtle: #38300a;
-
-    --status-active: #2fe0a0;
-    --status-active-subtle: #0f3326;
-    --status-muted: #a8a8a0;
-    --status-warning: #ff9a3c;
-    --status-danger: #ff5a6b;
-
-    --graph-bg: #111111;
-    --graph-dot: #2c2c2a;
-    --graph-edge: #555550;
-    --graph-edge-highlight: #f0f0ec;
-
-    --node-session: #ff6cb4;
-    --node-session-bg: #3a1530;
-    --node-search: #ffa650;
-    --node-search-bg: #38240a;
-    --node-page: #ffe06b;
-    --node-page-bg: #332b0a;
-    --node-paper: #3ce0a8;
-    --node-paper-bg: #0f2e24;
-    --node-concept: #ff8b55;
-    --node-concept-bg: #331f0e;
-    --node-insight: #f0f0ec;
-    --node-insight-bg: #2c2c29;
-    --node-domain: #8a8a86;
-
-    --shadow-xs: 2px 2px 0 var(--shadow-ink);
-    --shadow-sm: 3px 3px 0 var(--shadow-ink);
-    --shadow-md: 4px 4px 0 var(--shadow-ink);
-    --shadow-panel: 6px 6px 0 var(--shadow-ink);
-  }
+  /* Radius Scale (near-sharp geometry) */
+  --radius-xs: 1px;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
 }
 
 /* Global Reset & Base Setup */
@@ -294,9 +168,6 @@ button {
 }
 .stripes-warm {
   background: repeating-linear-gradient(-45deg, var(--accent-warm) 0 7px, transparent 7px 14px);
-}
-.stripes-accent {
-  background: repeating-linear-gradient(-45deg, var(--accent) 0 7px, transparent 7px 14px);
 }
 .stripes-yellow {
   background: repeating-linear-gradient(-45deg, var(--accent-yellow) 0 7px, transparent 7px 14px);

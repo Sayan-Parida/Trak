@@ -4,24 +4,16 @@ import {
   Network, 
   Clock, 
   BookOpen, 
-  Sun, 
-  Moon, 
-  Monitor, 
-  Plus, 
   Settings, 
-  Search,
-  Check
+  Search
 } from 'lucide-react';
-import { Theme, Session } from '../types';
+import { Session } from '../types';
 
 interface Props {
   activeSession: Session | undefined;
   activeTab: 'mindmap' | 'timeline' | 'pages';
   onChangeTab: (tab: 'mindmap' | 'timeline' | 'pages') => void;
-  theme: Theme;
-  onChangeTheme: (theme: Theme) => void;
   onOpenShortcuts: () => void;
-  onOpenNewSession: () => void;
   onFocusSearch: () => void;
 }
 
@@ -29,10 +21,7 @@ export default function Navbar({
   activeSession,
   activeTab,
   onChangeTab,
-  theme,
-  onChangeTheme,
   onOpenShortcuts,
-  onOpenNewSession,
   onFocusSearch
 }: Props) {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
@@ -136,78 +125,30 @@ export default function Navbar({
         </nav>
       )}
 
-      {/* Right: Command, New, Settings */}
+      {/* Right: FIND, Settings */}
       <div className="flex items-center gap-1.5">
         <button
           onClick={onFocusSearch}
           className="b-btn text-xs"
-          title={`Search or research (${shortcutLabel('K')})`}
+          title={`Find a research session (${shortcutLabel('K')})`}
         >
           <Search className="w-3 h-3" />
-          <span className="hidden sm:inline text-[11px]">Command</span>
+          <span className="hidden sm:inline text-[11px]">FIND</span>
           <kbd className="font-mono text-[10px] font-bold text-[var(--text-muted)] bg-[var(--surface-subtle)] border border-[var(--border-medium)] px-1 rounded-[var(--radius-xs)]">{shortcutLabel('K')}</kbd>
         </button>
 
-        <button
-          onClick={onOpenNewSession}
-          className="b-btn b-btn--accent text-xs"
-          title="New Workspace"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline text-[11px]">New</span>
-        </button>
-
-        {/* Settings & Appearance Dropdown */}
+        {/* Settings Dropdown */}
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setShowSettingsMenu(!showSettingsMenu)}
             className={`b-btn b-btn--square ${showSettingsMenu ? 'bg-[var(--surface-selected)]' : ''}`}
-            title="Settings & Appearance"
+            title="Settings"
           >
             <Settings className="w-4 h-4" />
           </button>
 
           {showSettingsMenu && (
             <div className="b-panel absolute right-0 mt-2 w-48 p-1.5 z-40 text-xs">
-              <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)] font-bold border-b-2 border-[var(--border-subtle)] mb-1">
-                Appearance
-              </div>
-
-              <button
-                onClick={() => { onChangeTheme('light'); setShowSettingsMenu(false); }}
-                className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] text-left"
-              >
-                <span className="flex items-center gap-2">
-                  <Sun className="w-3.5 h-3.5 opacity-70" />
-                  <span>Light</span>
-                </span>
-                {theme === 'light' && <Check className="w-3.5 h-3.5 text-[var(--accent)]" />}
-              </button>
-
-              <button
-                onClick={() => { onChangeTheme('dark'); setShowSettingsMenu(false); }}
-                className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] text-left"
-              >
-                <span className="flex items-center gap-2">
-                  <Moon className="w-3.5 h-3.5 opacity-70" />
-                  <span>Dark</span>
-                </span>
-                {theme === 'dark' && <Check className="w-3.5 h-3.5 text-[var(--accent)]" />}
-              </button>
-
-              <button
-                onClick={() => { onChangeTheme('system'); setShowSettingsMenu(false); }}
-                className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] text-left"
-              >
-                <span className="flex items-center gap-2">
-                  <Monitor className="w-3.5 h-3.5 opacity-70" />
-                  <span>System</span>
-                </span>
-                {theme === 'system' && <Check className="w-3.5 h-3.5 text-[var(--accent)]" />}
-              </button>
-
-              <div className="my-1 border-t-2 border-[var(--border-subtle)]" />
-
               <button
                 onClick={() => { onOpenShortcuts(); setShowSettingsMenu(false); }}
                 className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] text-left text-[var(--text-secondary)]"

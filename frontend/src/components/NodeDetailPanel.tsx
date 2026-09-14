@@ -1,12 +1,9 @@
-import { useState } from 'react';
 import { 
   X, 
   ExternalLink, 
-  Copy, 
-  Check, 
   ArrowRight
 } from 'lucide-react';
-import { NodeType } from '../types';
+import { NodeType, Session } from '../types';
 
 interface NodeDetailPanelProps {
   data: {
@@ -17,10 +14,7 @@ interface NodeDetailPanelProps {
     url?: string;
     abstract?: string;
     authors?: string[];
-    citationCount?: number;
-    relevanceScore?: number;
     insights?: string[];
-    tags?: string[];
     timestamp?: string;
     metadata?: Record<string, unknown>;
   };
@@ -30,40 +24,162 @@ interface NodeDetailPanelProps {
     type: NodeType;
     relationship: string;
   }>;
+  session?: Session;
   onSelectConnectedNode?: (nodeId: string) => void;
   onClose: () => void;
+}
+
+const formatTime = (value: string) =>
+  new Date(value).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+const formatDuration = (startTime: string, endTime: string | null) => {
+  if (!endTime) return 'In progress';
+  const minutes = Math.max(1, Math.round((new Date(endTime).getTime() - new Date(startTime).getTime()) / 60000));
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+};
+
+const typeLabel = (type: NodeType): string => {
+  switch (type) {
+    case 'SESSION': return 'Session';
+    case 'SEARCH': return 'Search';
+    case 'PAGE': return 'Source page';
+    case 'SOURCE_PAPER': return 'Paper';
+    case 'DOMAIN': return 'Domain';
+    case 'CONCEPT': return 'Concept';
+    case 'AI_INSIGHT': return 'Synthesis';
+    default: return String(type).replace(/_/g, ' ');
+  }
+};
+
+const toneOf = (type: NodeType): string => {
+  switch (type) {
+    case 'SESSION': return 'var(--node-session)';
+    case 'SEARCH': return 'var(--node-search)';
+    case 'PAGE': return 'var(--node-page)';
+    case 'SOURCE_PAPER': return 'var(--node-paper)';
+    case 'DOMAIN': return 'var(--node-domain)';
+    case 'CONCEPT': return 'var(--node-concept)';
+    case 'AI_INSIGHT': return 'var(--node-insight)';
+    default: return 'var(--accent)';
+  }
+};
+
+const metaNumber = (metadata: Record<string, unknown> | undefined, key: string): number | undefined => {
+  const value = metadata?.[key];
+  if (value == null) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+// Human labels only for relationships the graph genuinely produces. Anything
+// unknown keeps the graph's own label — nothing is invented.
+const PATH_LABEL: Record<string, string> = {
+  'results in': 'Opened from this search',
+  'inbound: results in': 'Led to this result',
+  'page to page': 'Navigated to this page',
+  'inbound: page to page': 'Arrived from this page',
+  'navigated from': 'Navigated from this page',
+  'inbound: navigated from': 'Navigated to this page',
+  'search to search': 'Followed by this search',
+  'inbound: search to search': 'Preceded by this search',
+  'belongs to': 'Domain of this page',
+  'inbound: belongs to': 'Page in this domain'
+};
+
+const humanizeRel = (rel: string): string => {
+  if (!rel) return '';
+  const label = PATH_LABEL[rel.toLowerCase()];
+  if (label) return label;
+  return rel.replace(/^inbound: /, '').replace(/^\w/, (c) => c.toUpperCase());
+};
+
+const wordJoin = (parts: Array<string | null | undefined>) => {
+  const visible = parts.filter((p): p is string => Boolean(p));
+  return visible.length > 0 ? visible.join(' · ') : null;
+};
+
+interface StatRow { label: string; value: string | null }
+
+function StatGrid({ rows }: { rows: StatRow[] }) {
+  const present = rows.filter((r) => r.value != null && r.value !== '');
+  if (present.length === 0) return null;
+  return (
+    <div className="grid grid-cols-2 gap-px border-2 border-[var(--border-subtle)] bg-[var(--border-subtle)] rounded-[var(--radius-sm)] overflow-hidden">
+      {present.map((row) => (
+        <div key={row.label} className="bg-[var(--surface-subtle)] px-2 py-1.5">
+          <span className="block text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--text-faint)]">{row.label}</span>
+          <span className="mt-0.5 block font-mono text-[11px] font-bold text-[var(--text-primary)]">{row.value}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function NodeDetailPanel({
   data,
   connectedNodes = [],
+  session,
   onSelectConnectedNode,
   onClose
 }: NodeDetailPanelProps) {
-  const [copiedCitation, setCopiedCitation] = useState(false);
-
-  const recordAccent = data.type === 'SEARCH'
-    ? 'var(--node-search)'
-    : data.type === 'PAGE' || data.type === 'SOURCE_PAPER'
-      ? 'var(--node-page)'
-      : data.type === 'DOMAIN'
-        ? 'var(--text-secondary)'
-        : 'var(--accent)';
-
   if (!data) return null;
 
-  const handleCopyBibtex = () => {
-    const authorStr = data.authors ? data.authors.join(' and ') : 'ResearchMind';
-    const bibtex = `@article{${data.id.replace(/[^a-zA-Z0-9]/g, '_')},
-  title = {${data.label}},
-  author = {${authorStr}},
-  year = {2026},
-  url = {${data.url || ''}}
-}`;
-    navigator.clipboard.writeText(bibtex);
-    setCopiedCitation(true);
-    setTimeout(() => setCopiedCitation(false), 1500);
-  };
+  const accent = toneOf(data.type);
+  const metaLine = (() => {
+    if (data.type === 'SEARCH') {
+      return wordJoin([data.domain ? `via ${data.domain}` : null, data.timestamp ? formatTime(data.timestamp) : null]);
+    }
+    if (data.type === 'PAGE' || data.type === 'SOURCE_PAPER') {
+      const visits = metaNumber(data.metadata, 'visits');
+      const parts = [data.domain];
+      if (data.timestamp) parts.push(`visited ${formatTime(data.timestamp)}`);
+      if (visits != null && visits > 1) parts.push(`${visits} visits`);
+      return wordJoin(parts);
+    }
+    if (data.type === 'DOMAIN') {
+      const pageCount = metaNumber(data.metadata, 'pageCount');
+      return wordJoin([pageCount != null ? `${pageCount} page${pageCount === 1 ? '' : 's'}` : null, 'domain group']);
+    }
+    if (data.timestamp) return wordJoin([`recorded ${formatTime(data.timestamp)}`]);
+    return null;
+  })();
+
+  let statRows: StatRow[] = [];
+  if (data.type === 'SESSION') {
+    const sess = session;
+    statRows = [
+      { label: 'Status', value: sess?.status ?? (typeof data.metadata?.['status'] === 'string' ? String(data.metadata['status']) : null) },
+      { label: 'Started', value: sess ? formatTime(sess.startTime) : (data.timestamp ? formatTime(data.timestamp) : null) },
+      { label: 'Duration', value: sess ? formatDuration(sess.startTime, sess.endTime) : null },
+      { label: 'Searches', value: sess != null ? String(sess.searchCount) : null },
+      { label: 'Pages', value: sess != null ? String(sess.pageCount) : null }
+    ];
+  }
+
+  // Only graph relationships the graph actually records; the SESSION root's
+  // "CONTAINS" container edges are pure noise and are dropped, then deduped.
+  const pathRows = (() => {
+    if (data.type === 'SESSION') return [];
+    const seen = new Set<string>();
+    const rows: typeof connectedNodes = [];
+    for (const c of connectedNodes) {
+      const rel = (c.relationship || '').toLowerCase();
+      if (!rel || rel.includes('contains')) continue;
+      const key = `${c.id}|${rel}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      rows.push({
+        ...c,
+        relationship: humanizeRel(rel)
+      });
+    }
+    return rows.slice(0, 6);
+  })();
+
+  const isSource = data.type === 'PAGE' || data.type === 'SOURCE_PAPER';
 
   return (
     <aside 
@@ -73,7 +189,7 @@ export default function NodeDetailPanel({
         borderTop: '1px solid var(--border-subtle)',
         borderRight: '1px solid var(--border-subtle)',
         borderBottom: '1px solid var(--border-subtle)',
-        borderLeft: `3px solid ${recordAccent}`,
+        borderLeft: `3px solid ${accent}`,
       }}
     >
       {/* Header */}
@@ -81,16 +197,9 @@ export default function NodeDetailPanel({
         className="h-11 px-4 border-b flex items-center justify-between shrink-0"
         style={{ borderColor: 'var(--border-subtle)', backgroundColor: 'var(--surface-subtle)' }}
       >
-        <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-[10px] font-mono uppercase font-semibold text-[var(--accent)] tracking-[0.14em]">
-            {data.type.replace('_', ' ')}
-          </span>
-          {data.domain && (
-            <span className="text-[10px] font-mono text-[var(--text-faint)] truncate max-w-[120px]">
-              • {data.domain}
-            </span>
-          )}
-        </div>
+        <span className="text-[10px] font-mono uppercase font-semibold tracking-[0.14em]" style={{ color: accent }}>
+          {typeLabel(data.type)}
+        </span>
 
         <button 
           onClick={onClose}
@@ -102,12 +211,17 @@ export default function NodeDetailPanel({
       </div>
 
       {/* Body Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-5 text-[13px]">
-        {/* Title */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 text-[13px]">
+        {/* Title / Query / Domain */}
         <div>
-          <h3 style={{ fontFamily: 'var(--font-display)' }} className="text-2xl font-semibold text-[var(--text-primary)] leading-[1.05] tracking-[-0.02em]">
+          <h3 style={{ fontFamily: 'var(--font-display)' }} className={`text-2xl font-semibold text-[var(--text-primary)] leading-[1.05] tracking-[-0.02em] ${data.type === 'SEARCH' ? 'italic' : ''}`}>
             {data.label}
           </h3>
+          {data.type === 'SEARCH' && (
+            <p className="mt-1 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--node-search)]">
+              Search query
+            </p>
+          )}
           {data.authors && data.authors.length > 0 && (
             <p className="text-[11px] text-[var(--text-muted)] mt-1 truncate">
               {data.authors.join(', ')}
@@ -115,45 +229,32 @@ export default function NodeDetailPanel({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 border-y border-[var(--border-subtle)] py-3 text-[10px] font-mono">
-          <div>
-            <span className="block uppercase tracking-[0.12em] text-[var(--text-faint)]">Record type</span>
-            <span className="mt-1 block text-[var(--text-secondary)]">{data.type.replace('_', ' ')}</span>
-          </div>
-          <div>
-            <span className="block uppercase tracking-[0.12em] text-[var(--text-faint)]">Last seen</span>
-            <span className="mt-1 block text-[var(--text-secondary)]">{data.timestamp ? new Date(data.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Not recorded'}</span>
-          </div>
-        </div>
-
-        {data.timestamp && (
-          <div className="border border-[var(--border-medium)] bg-[var(--surface-subtle)] px-3 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--node-concept)]">Last recorded activity</span>
-              <span className="text-[10px] font-mono text-[var(--text-muted)]">
-                {new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-            <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-secondary)]">
-              Last recorded activity for this {data.type === 'SEARCH' ? 'query' : 'record'}.
-            </p>
+        {metaLine && (
+          <div className="font-mono text-[11px] text-[var(--text-muted)]">
+            {metaLine}
           </div>
         )}
 
-        {/* Abstract / Excerpt */}
+        {statRows.length > 0 && <StatGrid rows={statRows} />}
+
+        {/* Research note (only when the node carries real excerpt text) */}
         {data.abstract && (
           <div className="space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[var(--accent)] font-semibold tracking-[0.12em]">Research note</span>
+            <span className="text-[10px] font-mono uppercase font-semibold tracking-[0.12em]" style={{ color: accent }}>
+              Research note
+            </span>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
               {data.abstract}
             </p>
           </div>
         )}
 
-        {/* Key Insights (if synthesis) */}
-        {data.insights && data.insights.length > 0 && (
+        {/* Key findings for synthesis nodes only */}
+        {data.type === 'AI_INSIGHT' && data.insights && data.insights.length > 0 && (
           <div className="space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[var(--accent)] font-semibold tracking-[0.12em]">Key Findings</span>
+            <span className="text-[10px] font-mono uppercase font-semibold tracking-[0.12em]" style={{ color: accent }}>
+              Key findings
+            </span>
             <ul className="space-y-1.5 text-xs text-[var(--text-secondary)] pl-3 list-disc">
               {data.insights.map((ins, i) => (
                 <li key={i}>{ins}</li>
@@ -162,25 +263,25 @@ export default function NodeDetailPanel({
           </div>
         )}
 
-        {/* Related Entities in Graph */}
-        {connectedNodes.length > 0 && (
+        {/* Research path — only meaningful relationships present in the graph */}
+        {pathRows.length > 0 && (
           <div className="space-y-1 pt-2 border-t border-[var(--border-subtle)]">
-            <span className="text-[10px] font-mono uppercase text-[var(--accent)] font-semibold tracking-[0.12em]">
-              Path to this record ({connectedNodes.length})
+            <span className="text-[10px] font-mono uppercase font-semibold tracking-[0.12em]" style={{ color: accent }}>
+              Research path
             </span>
-            <div className="space-y-1 max-h-36 overflow-y-auto">
-              {connectedNodes.map((cNode, index) => (
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {pathRows.map((c, index) => (
                 <button
-                  key={`${cNode.id}-${cNode.relationship}-${index}`}
-                  onClick={() => onSelectConnectedNode?.(cNode.id)}
-                  className="w-full text-left p-2 rounded-[var(--radius-sm)] hover:bg-[var(--surface-hover)] border border-[var(--border-subtle)] transition-colors flex items-center justify-between group"
+                  key={`${c.id}-${c.relationship}-${index}`}
+                  onClick={() => onSelectConnectedNode?.(c.id)}
+                  className="w-full flex items-center justify-between gap-2 p-2 rounded-[var(--radius-sm)] hover:bg-[var(--surface-hover)] border border-[var(--border-subtle)] transition-colors group"
                 >
                   <div className="min-w-0 pr-1">
                     <span className="text-[9px] font-mono text-[var(--text-faint)] uppercase block">
-                      {cNode.relationship}
+                      {c.relationship}
                     </span>
                     <span className="text-xs font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] truncate block">
-                      {cNode.label}
+                      {c.label}
                     </span>
                   </div>
                   <ArrowRight className="w-3 h-3 text-[var(--text-faint)] group-hover:text-[var(--text-primary)] shrink-0" />
@@ -191,31 +292,23 @@ export default function NodeDetailPanel({
         )}
       </div>
 
-      {/* Footer */}
-      <div 
-        className="h-10 px-3 border-t flex items-center justify-between shrink-0"
-        style={{ borderColor: 'var(--border-subtle)', backgroundColor: 'var(--surface-subtle)' }}
-      >
-        <button
-          onClick={handleCopyBibtex}
-          className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+      {/* Footer — source nodes only */}
+      {isSource && data.url && (
+        <div 
+          className="h-10 px-3 border-t flex items-center justify-between shrink-0"
+          style={{ borderColor: 'var(--border-subtle)', backgroundColor: 'var(--surface-subtle)' }}
         >
-          {copiedCitation ? <Check className="w-3 h-3 text-[var(--status-active)]" /> : <Copy className="w-3 h-3" />}
-          <span>{copiedCitation ? 'Copied' : 'BibTeX'}</span>
-        </button>
-
-        {data.url && (
           <a
             href={data.url}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-[11px] font-semibold text-[var(--accent)] hover:underline"
           >
-            <span>Open Source</span>
+            <span>Open source</span>
             <ExternalLink className="w-3 h-3" />
           </a>
-        )}
-      </div>
+        </div>
+      )}
     </aside>
   );
 }

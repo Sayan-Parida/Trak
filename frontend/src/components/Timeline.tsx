@@ -22,7 +22,6 @@ export default function Timeline({ sessionId, onJumpToNode }: Props) {
   const [entries, setEntries] = useState<TimelineEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<string>('ALL');
 
   const fetchTimeline = async () => {
     try {
@@ -46,11 +45,6 @@ export default function Timeline({ sessionId, onJumpToNode }: Props) {
       unsubscribe();
     };
   }, [sessionId]);
-
-  const filteredEntries = entries.filter((e) => {
-    if (filterType === 'ALL') return true;
-    return e.type === filterType;
-  });
 
   const getEventIcon = (type: TimelineEntry['type']) => {
     switch (type) {
@@ -90,37 +84,16 @@ export default function Timeline({ sessionId, onJumpToNode }: Props) {
               Research Timeline
             </h2>
           </div>
-
-          <div className="flex items-center gap-1 text-xs">
-            {[
-              { key: 'ALL', label: 'All' },
-              { key: 'SEARCH', label: 'Searches' },
-              { key: 'PAGE_VISIT', label: 'Sources' },
-              { key: 'AI_INSIGHT', label: 'Syntheses' }
-            ].map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setFilterType(f.key)}
-                className={`px-2 py-0.5 rounded transition-colors ${
-                  filterType === f.key
-                    ? 'bg-[var(--surface-selected)] text-[var(--text-primary)] font-semibold border-b-2 border-[var(--accent)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Timeline List */}
-        {filteredEntries.length === 0 ? (
+        {entries.length === 0 ? (
           <div className="text-center py-10 text-xs text-[var(--text-muted)]">
             No events recorded.
           </div>
         ) : (
           <div className="relative pl-5 space-y-3 before:absolute before:left-1.5 before:top-2 before:bottom-2 before:w-[1px] before:bg-[var(--border-subtle)]">
-            {filteredEntries.map((entry) => {
+            {entries.map((entry) => {
               const eventDate = new Date(entry.timestamp);
               return (
                 <div key={entry.id} className="relative group">
@@ -165,7 +138,7 @@ export default function Timeline({ sessionId, onJumpToNode }: Props) {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-[var(--accent)] hover:underline"
                         >
-                          <span>{entry.domain || 'External Resource'}</span>
+                          <span>{entry.domain}</span>
                           <ExternalLink className="w-2.5 h-2.5" />
                         </a>
                       ) : (

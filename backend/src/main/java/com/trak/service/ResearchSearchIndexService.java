@@ -57,6 +57,12 @@ public class ResearchSearchIndexService {
                 null, null, safe(session.getTitle()));
     }
 
+    @Transactional
+    public void removeSession(String sessionId) {
+        initialize();
+        jdbcTemplate.update("DELETE FROM " + INDEX_TABLE + " WHERE session_id = ?", sessionId);
+    }
+
     @Transactional(readOnly = true)
     public List<IndexHit> search(String matchQuery, int limit) {
         initialize();

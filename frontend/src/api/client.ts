@@ -9,6 +9,7 @@ import {
   ResumePoint
 } from '../types';
 import { researchStore } from './researchStore';
+import { sanitizeSessions } from './sanitize';
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, options);
@@ -21,9 +22,9 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 export const apiClient = {
   getSessions: async (): Promise<Session[]> => {
     try {
-      return await fetchJson<Session[]>('/api/sessions');
+      return sanitizeSessions(await fetchJson<Session[]>('/api/sessions'));
     } catch {
-      return researchStore.getSessions();
+      return sanitizeSessions(researchStore.getSessions());
     }
   },
 
@@ -62,11 +63,18 @@ export const apiClient = {
   },
 
   deleteSession: async (id: string): Promise<void> => {
+    let response: Response;
     try {
-      await fetchJson(`/api/sessions/${id}`, { method: 'DELETE' });
+      response = await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
     } catch {
+      // Backend unreachable — fall back to the local mirror.
       researchStore.deleteSession(id);
+      return;
     }
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+    researchStore.deleteSession(id);
   },
 
   getTimeline: async (id: string): Promise<TimelineEntry[]> => {

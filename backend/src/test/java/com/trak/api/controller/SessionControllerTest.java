@@ -104,6 +104,41 @@ class SessionControllerTest {
     }
 
     @Test
+    void deleteSession() throws Exception {
+        ResearchSession session = sessionService.createSession("Session to Delete");
+
+        mockMvc.perform(delete("/api/sessions/" + session.getId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/sessions/" + session.getId()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteSessionNotFound() throws Exception {
+        mockMvc.perform(delete("/api/sessions/non-existent-id"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteSessionRemovesAssociatedData() throws Exception {
+        ResearchSession session = sessionService.createSession("Session Cascade Delete");
+
+        eventIngestionService.ingestEvent(new com.trak.api.dto.BrowserEventRequest(
+                "NAVIGATION", "https://example.com/cascade", "Cascade Page",
+                1, 1, "link", "", Instant.now().toEpochMilli(), session.getId()));
+
+        assertTrue(pageVisitRepository.findBySessionId(session.getId()).size() >= 1);
+
+        mockMvc.perform(delete("/api/sessions/" + session.getId()))
+                .andExpect(status().isNoContent());
+
+        assertTrue(pageVisitRepository.findBySessionId(session.getId()).isEmpty());
+        assertTrue(sessionService.listSessions().stream()
+                .noneMatch(s -> s.getId().equals(session.getId())));
+    }
+
+    @Test
     void getPagesAndSearchesNotFound() throws Exception {
         mockMvc.perform(get("/api/sessions/non-existent-id/pages"))
             .andExpect(status().isNotFound());

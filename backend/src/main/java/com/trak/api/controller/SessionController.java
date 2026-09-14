@@ -67,6 +67,12 @@ public class SessionController {
         return ResponseEntity.ok(mapToResponse(session));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSession(@PathVariable String id) {
+        sessionService.deleteSession(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}/timeline")
     public ResponseEntity<List<TimelineEntryResponse>> getTimeline(@PathVariable String id) {
         return ResponseEntity.ok(sessionService.getTimeline(id));

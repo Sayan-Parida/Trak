@@ -1,47 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  Plus, 
   Search, 
   ChevronLeft, 
   ChevronRight, 
-  Trash2, 
-  Star
+  Trash2
 } from 'lucide-react';
 import { Session, SessionStatus } from '../types';
 import { apiClient } from '../api/client';
+import { sanitizeSessions } from '../api/sanitize';
 import { researchStore } from '../api/researchStore';
 import { shortcutLabel } from '../utils/platform';
 
-const formatArchiveDate = (value: string) => new Intl.DateTimeFormat(undefined, {
-  month: 'short',
-  day: 'numeric'
-}).format(new Date(value));
+const formatArchiveDate = (value: string | undefined) => {
+  if (!value || Number.isNaN(Date.parse(value))) return '—';
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric'
+  }).format(new Date(value));
+};
 
 interface Props {
   selectedSessionId: string | null;
-  onSelectSession: (id: string) => void;
+  onSelectSession: (id: string | null) => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  onOpenNewSessionModal: () => void;
 }
 
 export default function SessionList({
   selectedSessionId,
   onSelectSession,
   isCollapsed,
-  onToggleCollapse,
-  onOpenNewSessionModal
+  onToggleCollapse
 }: Props) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [searchFilter, setSearchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | SessionStatus>('ALL');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchSessions = async () => {
     try {
       setLoading(true);
-      const data = await apiClient.getSessions();
-      setSessions(data);
+      setSessions(sanitizeSessions(await apiClient.getSessions()));
     } catch (e) {
       console.warn('Error fetching sessions:', e);
     } finally {
@@ -61,25 +61,27 @@ export default function SessionList({
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (window.confirm('Delete this research session?')) {
+    if (!window.confirm('Delete this research session?')) return;
+    try {
       await apiClient.deleteSession(id);
+      setDeleteError(null);
+      setSessions(prev => prev.filter(s => s.id !== id));
+      researchStore.deleteSession(id);
       if (selectedSessionId === id) {
         const remaining = sessions.filter(s => s.id !== id);
-        if (remaining.length > 0) onSelectSession(remaining[0].id);
+        onSelectSession(remaining.length > 0 ? remaining[0].id : null);
       }
+    } catch {
+      setDeleteError('Could not delete this session.');
     }
   };
 
-  const handleToggleFavorite = (e: React.MouseEvent, session: Session) => {
-    e.stopPropagation();
-    apiClient.updateSession(session.id, { favorite: !session.favorite });
-  };
-
   const filteredSessions = sessions.filter((s) => {
-    const matchesSearch = !searchFilter.trim() || 
-      s.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      s.tags?.some(t => t.toLowerCase().includes(searchFilter.toLowerCase()));
-    const matchesStatus = statusFilter === 'ALL' || s.status === statusFilter;
+    const query = searchFilter.trim().toLowerCase();
+    const title = typeof s?.title === 'string' ? s.title : '';
+    const matchesSearch = !query ||
+      query.split(/\s+/).every((token) => title.toLowerCase().includes(token));
+    const matchesStatus = statusFilter === 'ALL' || s?.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -95,18 +97,10 @@ export default function SessionList({
       >
         <button
           onClick={onToggleCollapse}
-          title={`Expand Workspaces (${shortcutLabel('B')})`}
+          title={`Expand Sessions (${shortcutLabel('B')})`}
           className="b-btn b-btn--square mb-2"
         >
           <ChevronRight className="w-4 h-4" />
-        </button>
-
-        <button
-          onClick={onOpenNewSessionModal}
-          title="New Workspace"
-          className="b-btn b-btn--accent b-btn--square mb-3"
-        >
-          <Plus className="w-4 h-4" />
         </button>
 
         <div className="flex-1 w-full overflow-y-auto flex flex-col items-center gap-1.5 px-1">
@@ -156,14 +150,6 @@ export default function SessionList({
 
         <div className="flex items-center gap-1">
           <button
-            onClick={onOpenNewSessionModal}
-            title="New Workspace"
-            className="b-btn b-btn--accent b-btn--square"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
-
-          <button
             onClick={onToggleCollapse}
             title={`Collapse Sidebar (${shortcutLabel('B')})`}
             className="b-btn b-btn--square"
@@ -181,7 +167,7 @@ export default function SessionList({
             type="text"
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
-            placeholder="Filter sessions..."
+            placeholder="Search sessions..."
           />
         </div>
 
@@ -201,6 +187,13 @@ export default function SessionList({
 
       {/* Session List */}
       <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
+        {deleteError && (
+          <div
+            className="border-2 border-[var(--status-danger)] bg-[var(--surface-base)] px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.08em] text-[var(--status-danger)]"
+          >
+            {deleteError}
+          </div>
+        )}
         {loading && sessions.length === 0 ? (
           <div className="text-center py-8 text-xs font-mono text-[var(--text-muted)]">
             <span className="inline-block w-2 h-2 animate-pulse bg-[var(--accent)] mr-2" />
@@ -209,6 +202,12 @@ export default function SessionList({
         ) : filteredSessions.length === 0 ? (
           <div className="b-panel text-center py-8 px-3 text-xs font-mono text-[var(--text-muted)]">
             No sessions found.
+            {searchFilter.trim() && (
+              <>
+                <br />
+                <span className="text-[var(--text-faint)]">Try a different search.</span>
+              </>
+            )}
           </div>
         ) : (
           filteredSessions.map((session, index) => {
@@ -244,13 +243,6 @@ export default function SessionList({
                   </div>
 
                   <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => handleToggleFavorite(e, session)}
-                      className="w-6 h-6 flex items-center justify-center border border-transparent hover:border-[var(--border-medium)] text-[var(--text-muted)] hover:text-[var(--status-warning)]"
-                      title={session.favorite ? 'Unfavorite' : 'Favorite'}
-                    >
-                      <Star className={`w-3 h-3 ${session.favorite ? 'fill-[var(--status-warning)] text-[var(--status-warning)]' : ''}`} />
-                    </button>
                     <button
                       onClick={(e) => handleDelete(e, session.id)}
                       className="w-6 h-6 flex items-center justify-center border border-transparent hover:border-[var(--status-danger)] text-[var(--text-muted)] hover:text-[var(--status-danger)]"

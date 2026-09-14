@@ -18,8 +18,6 @@ export type RelationshipType =
 
 export type SessionStatus = 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
 
-export type Theme = 'light' | 'dark' | 'system';
-
 export interface Session {
   id: string;
   title: string;
@@ -32,7 +30,6 @@ export interface Session {
   searchCount: number;
   entityCount: number;
   tags?: string[];
-  favorite?: boolean;
 }
 
 export interface PageVisit {

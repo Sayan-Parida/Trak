@@ -81,7 +81,7 @@ export default function PagesView({ sessionId }: Props) {
           <div>
             <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--accent)]">Research library</div>
             <h2 className="mt-1 font-[var(--font-display)] text-xl text-[var(--text-primary)]">
-              Sources & Publications
+              Sources
             </h2>
           </div>
 
@@ -153,8 +153,6 @@ export default function PagesView({ sessionId }: Props) {
                 <tr>
                   <th className="py-2 px-3">Title</th>
                   <th className="py-2 px-3">Domain</th>
-                  <th className="py-2 px-3">Authors</th>
-                  <th className="py-2 px-3 text-right">Citations</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-subtle)]">
@@ -169,12 +167,6 @@ export default function PagesView({ sessionId }: Props) {
                     </td>
                     <td className="py-2 px-3 font-mono text-[11px] text-[var(--text-muted)]">
                       {page.domain}
-                    </td>
-                    <td className="py-2 px-3 text-[11px] text-[var(--text-muted)] truncate max-w-[150px]">
-                      {page.authors?.join(', ') || '—'}
-                    </td>
-                    <td className="py-2 px-3 text-right font-mono text-[11px] text-[var(--text-secondary)]">
-                      {page.citationCount || '—'}
                     </td>
                   </tr>
                 ))}

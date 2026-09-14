@@ -108,8 +108,7 @@ class ResearchStore {
       pageCount: 0,
       searchCount: 0,
       entityCount: 1,
-      tags: tags.length > 0 ? tags : ['Exploration'],
-      favorite: false
+      tags: tags.length > 0 ? tags : ['Exploration']
     };
 
     const initialNode: MindMapNode = {

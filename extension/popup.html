@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>ResearchMind</title>
+  <title>Pariet</title>
   <style>
     :root {
       --bg: #f8f9fa;
@@ -97,11 +97,29 @@
       padding: 10px;
     }
 
+    #session-label {
+      font-size: 9px;
+      font-family: monospace;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--status-active);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
     #session-info {
       font-size: 11px;
       font-weight: 600;
       margin-bottom: 8px;
       color: var(--text);
+    }
+
+    #capture-note {
+      font-size: 10px;
+      font-family: monospace;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: none;
     }
 
     #queue-info {
@@ -165,7 +183,7 @@
   <div class="header">
     <div class="brand">
       <div class="brand-mark"></div>
-      <span>ResearchMind</span>
+      <span>Pariet</span>
     </div>
     <div class="status-container">
       <div id="status-indicator" class="status-dot disconnected"></div>
@@ -174,20 +192,22 @@
   </div>
 
   <div class="section">
+    <div id="session-label"></div>
     <div id="session-info">Loading...</div>
+    <div id="capture-note">Capturing research activity...</div>
     <div id="queue-info"></div>
 
     <div id="start-session-div" style="display: none;">
-      <input type="text" id="session-title" placeholder="Workspace Topic...">
-      <button id="start-btn" class="primary-btn">Start Session</button>
+      <input type="text" id="session-title" placeholder="Research topic (optional)">
+      <button id="start-btn" class="primary-btn">START RESEARCH</button>
     </div>
 
     <div id="end-session-div" style="display: none;">
-      <button id="end-btn" class="danger-btn">End Session</button>
+      <button id="end-btn" class="danger-btn">END SESSION</button>
     </div>
   </div>
 
-  <button id="dashboard-btn" class="secondary-btn">Open Workspace</button>
+  <button id="dashboard-btn" class="secondary-btn">OPEN PARIET</button>
 
   <script src="popup.js"></script>
 </body>

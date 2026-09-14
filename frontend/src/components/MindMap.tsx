@@ -17,26 +17,24 @@ import {
   MarkerType
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import dagre from '@dagrejs/dagre';
+import { layoutResearchGraph, LAYOUT_NODE_WIDTH, LAYOUT_NODE_HEIGHT } from '../utils/graphLayout';
 import { apiClient } from '../api/client';
 import { researchStore } from '../api/researchStore';
 import { nodeTypes } from './CustomNodes';
 import NodeDetailPanel from './NodeDetailPanel';
 import { MapControls, MapFilterState, DEFAULT_MAP_FILTER, PRIMARY_RELATIONSHIPS, SECONDARY_RELATIONSHIPS } from './MapControls';
-import { MindMapNode, MindMapEdge, NodeType } from '../types';
+import { MindMapNode, MindMapEdge, NodeType, Session } from '../types';
 import { Loader2 } from 'lucide-react';
 
 interface Props {
   sessionId: string;
+  session?: Session;
   focusNodeId?: string | null;
   onFocusNodeConsumed?: () => void;
 }
 
-const nodeWidth = 240;
-const nodeHeight = 100;
 const positionsKey = (sessionId: string) => `researchmind:node-positions:${sessionId}`;
 const pathwayRelationships = new Set(['SEARCH_TO_SEARCH', 'RESULTS_IN', 'PAGE_TO_PAGE', 'NAVIGATED_FROM']);
-const layoutRelationships = new Set(['SEARCH_TO_SEARCH', 'RESULTS_IN', 'PAGE_TO_PAGE', 'NAVIGATED_FROM']);
 
 const edgePriority = (relationship: string) => {
   if (relationship === 'SEARCH_TO_SEARCH' || relationship === 'RESULTS_IN') return 'anchor';
@@ -64,46 +62,6 @@ const readSavedPositions = (sessionId: string): SavedPositions => {
 
 const writeSavedPositions = (sessionId: string, positions: SavedPositions) => {
   localStorage.setItem(positionsKey(sessionId), JSON.stringify(positions));
-};
-
-const getLayoutedElements = (
-  nodes: Node[], 
-  edges: Edge[], 
-  direction: 'LR' | 'TB' = 'LR'
-) => {
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
-  
-  dagreGraph.setGraph({ 
-    rankdir: direction,
-    nodesep: 35,
-    ranksep: 40,
-    marginx: 30,
-    marginy: 30
-  });
-  
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-  });
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(dagreGraph);
-
-  const newNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id) || { x: 0, y: 0 };
-    return {
-      ...node,
-      position: {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
-      },
-    };
-  });
-
-  return { nodes: newNodes, edges };
 };
 
 function ResearchEdge({
@@ -176,22 +134,23 @@ function ResearchEdge({
 
 const edgeTypes = { research: ResearchEdge };
 
-function ViewportFitter({ nodeCount }: { nodeCount: number }) {
+function ViewportFitter({ nodeCount, disabled }: { nodeCount: number; disabled?: boolean }) {
   const { fitView } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
 
   useEffect(() => {
-    if (!nodesInitialized || nodeCount === 0) return;
+    // A pending focus owns the viewport: never auto-fit over it.
+    if (disabled || !nodesInitialized || nodeCount === 0) return;
     const frame = requestAnimationFrame(() => {
       fitView({ padding: 0.05, duration: 300 });
     });
     return () => cancelAnimationFrame(frame);
-  }, [nodeCount, nodesInitialized, fitView]);
+  }, [nodeCount, nodesInitialized, fitView, disabled]);
 
   return null;
 }
 
-function InnerMindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
+function InnerMindMap({ sessionId, session, focusNodeId, onFocusNodeConsumed }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [loading, setLoading] = useState(true);
@@ -208,6 +167,11 @@ function InnerMindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
   const resettingLayoutRef = useRef(false);
   const rawDataRef = useRef<{ nodes: MindMapNode[]; edges: MindMapEdge[] }>({ nodes: [], edges: [] });
   const focusHandledRef = useRef<string | null>(null);
+  // A requested-but-unhandled focus owns the viewport: automatic fits must
+  // stay out of its way so VIEW PATH navigation is deterministic.
+  const focusPending = focusNodeId != null && focusHandledRef.current !== focusNodeId;
+  const focusPendingRef = useRef(false);
+  focusPendingRef.current = focusPending;
 
   const loadGraph = useCallback(async () => {
     try {
@@ -263,15 +227,22 @@ function InnerMindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
         });
       }
 
-      const { nodes: autoLayoutedNodes } = getLayoutedElements(
-        flowNodes, 
-        flowEdges.filter((edge) => layoutRelationships.has(String(edge.data?.relationship))), 
+      // ONE canonical layout: same function + same normalized inputs as Reset.
+      // Saved (user-dragged) positions still win when present; a fresh load
+      // with no saved positions always yields the canonical arrangement.
+      const canonicalPositions = layoutResearchGraph(
+        flowNodes.map((node) => node.id),
+        flowEdges.map((edge) => ({
+          source: edge.source,
+          target: edge.target,
+          relationship: String(edge.data?.relationship ?? '')
+        })),
         layoutDirection
       );
       const layoutedEdges = flowEdges;
-      const layoutedNodes = autoLayoutedNodes.map((node) => ({
+      const layoutedNodes = flowNodes.map((node) => ({
         ...node,
-        position: savedPositions[node.id] || node.position
+        position: savedPositions[node.id] || canonicalPositions[node.id] || node.position
       }));
 
       setNodes(layoutedNodes);
@@ -292,6 +263,7 @@ function InnerMindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
       if (width <= 0 || height <= 0) return;
+      if (focusPendingRef.current) return;
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         fitView({ padding: 0.05, duration: 0 });
@@ -324,9 +296,22 @@ function InnerMindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
     resettingLayoutRef.current = true;
     localStorage.removeItem(positionsKey(sessionId));
     savedPositionsRef.current = {};
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges, layoutDirection);
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
+    // Recompute the canonical layout from the same normalized inputs the
+    // initial load uses — never from live visual positions, never a subset.
+    const canonicalPositions = layoutResearchGraph(
+      nodes.map((node) => node.id),
+      edges.map((edge) => ({
+        source: edge.source,
+        target: edge.target,
+        relationship: String(edge.data?.relationship ?? '')
+      })),
+      layoutDirection
+    );
+    setNodes(nodes.map((node) => ({
+      ...node,
+      position: canonicalPositions[node.id] || node.position
+    })));
+    setEdges(edges);
     requestAnimationFrame(() => {
       localStorage.removeItem(positionsKey(sessionId));
       resettingLayoutRef.current = false;
@@ -477,7 +462,7 @@ function InnerMindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
     const targetNode = nodes.find((n) => n.id === nodeId);
     if (targetNode) {
       setSelectedNodeData(targetNode.data);
-      setCenter(targetNode.position.x + nodeWidth / 2, targetNode.position.y + nodeHeight / 2, {
+      setCenter(targetNode.position.x + LAYOUT_NODE_WIDTH / 2, targetNode.position.y + LAYOUT_NODE_HEIGHT / 2, {
         zoom: 1.1,
         duration: 400
       });
@@ -578,7 +563,7 @@ function InnerMindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
           fitViewOptions={{ padding: 0.05 }}
           proOptions={{ hideAttribution: true }}
         >
-          <ViewportFitter nodeCount={nodes.length} />
+          <ViewportFitter nodeCount={nodes.length} disabled={focusPending} />
           
           <Background 
             gap={20} 
@@ -637,6 +622,7 @@ function InnerMindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
         <NodeDetailPanel
           data={selectedNodeData}
           connectedNodes={connectedNodesForSelected}
+          session={session}
           onSelectConnectedNode={handleJumpToNode}
           onClose={() => {
             setSelectedNodeData(null);
@@ -648,10 +634,10 @@ function InnerMindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
   );
 }
 
-export default function MindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
+export default function MindMap({ sessionId, session, focusNodeId, onFocusNodeConsumed }: Props) {
   return (
     <ReactFlowProvider>
-      <InnerMindMap sessionId={sessionId} focusNodeId={focusNodeId} onFocusNodeConsumed={onFocusNodeConsumed} />
+      <InnerMindMap sessionId={sessionId} session={session} focusNodeId={focusNodeId} onFocusNodeConsumed={onFocusNodeConsumed} />
     </ReactFlowProvider>
   );
 }
