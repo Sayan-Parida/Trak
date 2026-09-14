@@ -132,12 +132,6 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
                 activeSessionId={selectedSessionId}
                 isOpen={isSearchOpen}
                 onClose={() => setIsSearchOpen(false)}
-                onOpenSession={(sId) => {
-                  setSelectedSessionId(sId);
-                  setActiveTab('mindmap');
-                  setIsSearchOpen(false);
-                  setFocusNodeId(null);
-                }}
                 onFocusNode={(nodeId) => {
                   setFocusNodeId(nodeId);
                   setIsSearchOpen(false);

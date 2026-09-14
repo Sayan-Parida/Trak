@@ -1,28 +1,25 @@
 import { useState, useRef, useEffect, FormEvent } from 'react';
-import { 
-  Search, 
-  X, 
-  Loader2, 
-  ChevronRight
-} from 'lucide-react';
-import { apiClient } from '../api/client';
-import { ResearchSearchData } from '../types';
-import { SUGGESTED_QUERIES } from '../api/mockData';
+import { Search, X, Loader2 } from 'lucide-react';
+import { loadSessionData, searchSession, SessionSearchResults } from '../utils/sessionSearch';
 
 interface Props {
   activeSessionId?: string | null;
-  onOpenSession: (sessionId: string) => void;
   onFocusNode?: (nodeId: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-export default function ResearchSearch({ activeSessionId, onOpenSession, onFocusNode, isOpen = false, onClose }: Props) {
+const formatDate = (value: string) =>
+  new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(value));
+
+export default function ResearchSearch({ activeSessionId, onFocusNode, isOpen = false, onClose }: Props) {
   const [query, setQuery] = useState('');
-  const [data, setData] = useState<ResearchSearchData | null>(null);
+  const [results, setResults] = useState<SessionSearchResults | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -36,7 +33,6 @@ export default function ResearchSearch({ activeSessionId, onOpenSession, onFocus
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setShowDropdown(false);
         if (onClose) onClose();
       }
     };
@@ -46,30 +42,17 @@ export default function ResearchSearch({ activeSessionId, onOpenSession, onFocus
 
   const handleSearch = async (searchQuery: string) => {
     const q = searchQuery.trim();
-    if (!q) return;
+    if (!q || !activeSessionId) return;
 
     setLoading(true);
-    setStatusMessage('Searching literature & synthesis...');
-
+    setResults(null);
     try {
-      if (activeSessionId) {
-        await apiClient.executeDeepResearch(
-          activeSessionId, 
-          q, 
-          (_step, msg) => {
-            setStatusMessage(msg);
-          }
-        );
-      }
-      
-      const searchRes = await apiClient.searchResearch(q);
-      setData(searchRes);
-      setShowDropdown(true);
-    } catch (err: any) {
-      console.error(err);
+      const { pages, searches } = await loadSessionData(activeSessionId);
+      setResults(searchSession(activeSessionId, q, pages, searches));
+    } catch {
+      setResults({ sessionId: activeSessionId, pages: [], searches: [], totalMatches: 0 });
     } finally {
       setLoading(false);
-      setStatusMessage(null);
     }
   };
 
@@ -78,10 +61,17 @@ export default function ResearchSearch({ activeSessionId, onOpenSession, onFocus
     handleSearch(query);
   };
 
+  const handleClear = () => {
+    setQuery('');
+    setResults(null);
+  };
+
+  const canSearch = !!activeSessionId;
+
   return (
     <div ref={containerRef} className="relative z-20">
       <form onSubmit={onSubmit} className="relative flex items-center">
-        <div 
+        <div
           className="flex items-center gap-2 px-3 h-9 rounded-[var(--radius-sm)] border transition-colors w-full sm:w-80 md:w-96"
           style={{
             backgroundColor: 'var(--surface-subtle)',
@@ -100,121 +90,150 @@ export default function ResearchSearch({ activeSessionId, onOpenSession, onFocus
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
-              setShowDropdown(true);
+              setResults(null);
             }}
-            onFocus={() => setShowDropdown(true)}
-            placeholder="Search literature, topics or synthesize..."
-            className="flex-1 min-w-0 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.defaultPrevented) {
+                e.preventDefault();
+                handleSearch(query);
+              }
+            }}
+            placeholder={canSearch ? 'Search this session...' : 'Open a session to search'}
+            disabled={!canSearch}
+            className="flex-1 min-w-0 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
           />
 
           {query && !loading && (
-            <button
-              type="button"
-              onClick={() => { setQuery(''); setData(null); }}
-              className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-            >
+            <button type="button" onClick={handleClear} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
 
           <button
             type="submit"
-            disabled={loading || !query.trim()}
-            className="px-2.5 py-1 rounded-[var(--radius-xs)] text-xs font-medium bg-[var(--surface-selected)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:cursor-not-allowed"
+            disabled={loading || !query.trim() || !canSearch}
+            className="b-btn px-2.5 py-1 text-[10px] disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {loading ? '...' : 'Run'}
+            {loading ? '...' : 'RUN'}
           </button>
         </div>
       </form>
 
-      {/* Progress status line */}
-      {loading && statusMessage && (
-        <div className="absolute top-full left-0 mt-1 px-2 py-1 text-[11px] font-mono text-[var(--text-muted)] bg-[var(--surface-base)] border border-[var(--border-subtle)] rounded shadow-sm">
-          {statusMessage}
-        </div>
-      )}
+      {/* Dropdown */}
+      <div
+        className="absolute left-0 top-full mt-2 w-full sm:w-[28rem] rounded-[var(--radius-md)] border p-1.5 z-30 shadow-panel text-sm"
+        style={{
+          backgroundColor: 'var(--surface-elevated)',
+          borderColor: 'var(--border-medium)',
+          maxHeight: '360px',
+          overflowY: 'auto',
+        }}
+      >
+        {/* No active session */}
+        {!activeSessionId && (
+          <div className="py-4 text-center font-mono text-[10px] text-[var(--text-muted)]">
+            Open a research session to search.
+          </div>
+        )}
 
-      {/* Suggestions / Results Dropdown */}
-      {showDropdown && !loading && (
-        <div 
-          className="absolute left-0 top-full mt-2 w-full sm:w-96 rounded-[var(--radius-md)] border p-1.5 z-30 shadow-panel text-sm"
-          style={{
-            backgroundColor: 'var(--surface-elevated)',
-            borderColor: 'var(--border-medium)',
-            maxHeight: '360px',
-            overflowY: 'auto'
-          }}
-        >
-          {/* Recent/Suggested queries */}
-          {!data && (
-            <div className="space-y-0.5">
-              <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)] font-semibold">
-                Suggested Topics
-              </div>
-              {SUGGESTED_QUERIES.map((sq, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => {
-                    setQuery(sq);
-                    handleSearch(sq);
-                  }}
-                  className="w-full text-left px-2 py-1.5 rounded text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors flex items-center justify-between group"
-                >
-                  <span className="truncate">{sq}</span>
-                  <ChevronRight className="w-3 h-3 text-[var(--text-muted)] opacity-0 group-hover:opacity-100" />
-                </button>
-              ))}
+        {/* Loading */}
+        {activeSessionId && loading && (
+          <div className="py-4 text-center font-mono text-[10px] text-[var(--text-muted)]">
+            Searching&hellip;
+          </div>
+        )}
+
+        {/* Neutral: session is open, nothing typed yet */}
+        {activeSessionId && !loading && !results && !query.trim() && (
+          <div className="py-4 text-center font-mono text-[10px] text-[var(--text-muted)]">
+            Search this session&rsquo;s pages and queries.
+          </div>
+        )}
+
+        {/* Hint to run */}
+        {activeSessionId && !loading && !results && query.trim() && (
+          <div className="py-4 text-center font-mono text-[10px] text-[var(--text-muted)]">
+            Press <span className="font-bold text-[var(--text-secondary)]">RUN</span> or{' '}
+            <span className="font-bold text-[var(--text-secondary)]">Enter</span> to search.
+          </div>
+        )}
+
+        {/* Results */}
+        {!loading && results && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between px-2 py-1 text-[10px] font-mono text-[var(--text-muted)] border-b border-[var(--border-subtle)]">
+              <span>
+                <span className="font-bold text-[var(--text-secondary)]">{results.totalMatches}</span> matches
+              </span>
+              <button onClick={handleClear} className="hover:text-[var(--text-primary)]">
+                Clear
+              </button>
             </div>
-          )}
 
-          {/* Search Results */}
-          {data && (
-            <div className="space-y-1">
-              <div className="flex items-center justify-between px-2 py-1 text-[10px] font-mono text-[var(--text-muted)] border-b border-[var(--border-subtle)]">
-                <span>{data.totalResults} results for &ldquo;{data.normalizedQuery}&rdquo;</span>
-                <button 
-                  onClick={() => { setData(null); setShowDropdown(false); }}
-                  className="hover:text-[var(--text-primary)]"
-                >
-                  Close
-                </button>
+            {results.totalMatches === 0 && (
+              <div className="py-4 text-center font-mono text-[10px] text-[var(--text-muted)]">
+                No matches in this research session.
               </div>
+            )}
 
-              {data.results.length === 0 ? (
-                <div className="py-4 text-center text-[var(--text-muted)] text-xs">
-                  No matching results found.
-                </div>
-              ) : (
-                data.results.map((res) => (
-                  <div 
-                    key={res.id}
-                    onClick={() => {
-                      // If the result belongs to the currently displayed session,
-                      // focus/center that node instead of navigating away.
-                      if (activeSessionId && res.sessionId === activeSessionId && onFocusNode) {
-                        onFocusNode(res.id);
-                        setShowDropdown(false);
-                      } else {
-                        // Result belongs to another session or no active session: navigate normally.
-                        onOpenSession(res.sessionId);
-                        setShowDropdown(false);
-                      }
-                    }}
-                    className="p-2 rounded hover:bg-[var(--surface-hover)] cursor-pointer transition-colors"
+            {/* Pages */}
+            {results.pages.length > 0 && (
+              <Section title="PAGES" count={results.pages.length}>
+                {results.pages.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => window.open(p.url, '_blank', 'noopener,noreferrer')}
+                    className="w-full text-left px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] transition-colors"
                   >
-                    <div className="flex items-center justify-between gap-1 text-[10px] font-mono text-[var(--text-muted)] mb-0.5">
-                      <span className="uppercase font-semibold">{res.type.replace('_', ' ')}</span>
-                      {res.domain && <span>{res.domain}</span>}
+                    <div className="font-medium text-[11px] text-[var(--text-primary)] leading-tight truncate">
+                      {p.title}
                     </div>
-                    <div className="font-medium text-[var(--text-primary)] leading-tight">{res.label}</div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      )}
+                    <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[9px] text-[var(--text-muted)]">
+                      {p.domain && <span>{p.domain}</span>}
+                    </div>
+                  </button>
+                ))}
+              </Section>
+            )}
+
+            {/* Searches */}
+            {results.searches.length > 0 && (
+              <Section title="SEARCHES" count={results.searches.length}>
+                {results.searches.map((sq) => (
+                  <button
+                    key={sq.id}
+                    type="button"
+                    onClick={() => {
+                      if (onFocusNode) onFocusNode(sq.id);
+                    }}
+                    className="w-full text-left px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] transition-colors"
+                  >
+                    <div className="font-medium text-[11px] text-[var(--text-primary)] leading-tight truncate">
+                      &ldquo;{sq.queryText}&rdquo;
+                    </div>
+                    <div className="mt-0.5 font-mono text-[9px] text-[var(--text-muted)]">
+                      {formatDate(sq.timestamp)}
+                    </div>
+                  </button>
+                ))}
+              </Section>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
+  return (
+    <div className="space-y-0.5">
+      <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)] font-semibold border-b border-[var(--border-subtle)]">
+        {title}
+        <span className="ml-1 text-[var(--text-faint)]">({count})</span>
+      </div>
+      {children}
     </div>
   );
 }
