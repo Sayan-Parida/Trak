@@ -29,6 +29,7 @@ import { Loader2 } from 'lucide-react';
 interface Props {
   sessionId: string;
   focusNodeId?: string | null;
+  onFocusNodeConsumed?: () => void;
 }
 
 const nodeWidth = 240;
@@ -190,7 +191,7 @@ function ViewportFitter({ nodeCount }: { nodeCount: number }) {
   return null;
 }
 
-function InnerMindMap({ sessionId }: Props) {
+function InnerMindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [loading, setLoading] = useState(true);
@@ -206,6 +207,7 @@ function InnerMindMap({ sessionId }: Props) {
   const savedPositionsRef = useRef<SavedPositions>({});
   const resettingLayoutRef = useRef(false);
   const rawDataRef = useRef<{ nodes: MindMapNode[]; edges: MindMapEdge[] }>({ nodes: [], edges: [] });
+  const focusHandledRef = useRef<string | null>(null);
 
   const loadGraph = useCallback(async () => {
     try {
@@ -482,6 +484,21 @@ function InnerMindMap({ sessionId }: Props) {
     }
   }, [nodes, setCenter]);
 
+  // Resume Research: focus a node (e.g. the session's stopping point) once the
+  // graph is loaded, highlighting it and its connected research path.
+  useEffect(() => {
+    if (!focusNodeId) return;
+    if (focusHandledRef.current === focusNodeId) return;
+    if (nodes.length === 0) return;
+    const target = nodes.find((n) => n.id === focusNodeId);
+    if (target) {
+      focusHandledRef.current = focusNodeId;
+      onNodeClick(null, target);
+      handleJumpToNode(focusNodeId);
+    }
+    onFocusNodeConsumed?.();
+  }, [focusNodeId, nodes, onNodeClick, handleJumpToNode, onFocusNodeConsumed]);
+
   const handleExportGraph = useCallback(() => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(rawDataRef.current, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -631,10 +648,10 @@ function InnerMindMap({ sessionId }: Props) {
   );
 }
 
-export default function MindMap({ sessionId }: Props) {
+export default function MindMap({ sessionId, focusNodeId, onFocusNodeConsumed }: Props) {
   return (
     <ReactFlowProvider>
-      <InnerMindMap sessionId={sessionId} />
+      <InnerMindMap sessionId={sessionId} focusNodeId={focusNodeId} onFocusNodeConsumed={onFocusNodeConsumed} />
     </ReactFlowProvider>
   );
 }

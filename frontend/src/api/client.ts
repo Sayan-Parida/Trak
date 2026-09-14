@@ -5,7 +5,8 @@ import {
   TimelineEntry, 
   MindMapData, 
   ResearchGraphData, 
-  ResearchSearchData 
+  ResearchSearchData,
+  ResumePoint
 } from '../types';
 import { researchStore } from './researchStore';
 
@@ -89,6 +90,14 @@ export const apiClient = {
       return await fetchJson<SearchQuery[]>(`/api/sessions/${id}/searches`);
     } catch {
       return researchStore.getSearches(id);
+    }
+  },
+
+  getResumePoint: async (id: string): Promise<ResumePoint> => {
+    try {
+      return await fetchJson<ResumePoint>(`/api/sessions/${id}/resume-point`);
+    } catch {
+      return researchStore.getResumePoint(id);
     }
   },
 

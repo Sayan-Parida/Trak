@@ -173,6 +173,24 @@ export interface ResearchSearchData {
   results: ResearchSearchResult[];
 }
 
+export interface ResumePoint {
+  sessionId: string;
+  page: {
+    id: string;
+    url: string;
+    domain: string | null;
+    title: string;
+    lastVisited: string;
+    visitCount: number;
+  } | null;
+  search: {
+    id: string;
+    queryText: string;
+    engine: string;
+    timestamp: string;
+  } | null;
+}
+
 export interface ResearchSynthesisStep {
   step: number;
   title: string;

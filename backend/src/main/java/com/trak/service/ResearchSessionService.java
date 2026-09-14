@@ -1,6 +1,7 @@
 package com.trak.service;
 
 import com.trak.api.dto.MindMapResponse;
+import com.trak.api.dto.ResumePointResponse;
 import com.trak.api.dto.TimelineEntryResponse;
 import com.trak.domain.model.BrowserEvent;
 import com.trak.domain.model.PageVisit;
@@ -130,6 +131,50 @@ public class ResearchSessionService {
     public List<SearchQuery> getSearches(String sessionId) {
         getSession(sessionId);
         return searchQueryRepository.findBySessionIdOrderByTimestamp(sessionId);
+    }
+
+    /**
+     * Deterministic stopping point for "Resume Research".
+     *
+     * <p>Picks the most recently visited meaningful page of the session
+     * (research URL, non-blank title &mdash; skipping internal browser pages
+     * and empty new-tab screens). The associated search, when present, is the
+     * SearchQuery authoritatively linked to that page via
+     * {@code pageVisitId} &mdash; the same provenance used for RESULTS_IN
+     * edges in the mind map &mdash; choosing the latest one if several exist.
+     */
+    public ResumePointResponse getResumePoint(String sessionId) {
+        ResearchSession session = getSession(sessionId);
+        List<PageVisit> pages = getSessionScopedPages(session);
+
+        PageVisit stoppingPage = pages.stream()
+                .filter(pv -> PageVisitService.isResearchUrl(pv.getUrl()))
+                .filter(pv -> pv.getTitle() != null && !pv.getTitle().isBlank())
+                .max(Comparator.comparing(PageVisit::getLastVisited)
+                        .thenComparing(PageVisit::getFirstVisited))
+                .orElse(null);
+
+        if (stoppingPage == null) {
+            return new ResumePointResponse(sessionId, null, null);
+        }
+
+        ResumePointResponse.ResumeSearch search = searchQueryRepository.findBySessionId(sessionId).stream()
+                .filter(sq -> stoppingPage.getId().equals(sq.getPageVisitId()))
+                .max(Comparator.comparing(SearchQuery::getTimestamp))
+                .map(sq -> new ResumePointResponse.ResumeSearch(
+                        sq.getId(), sq.getQueryText(), sq.getEngine(), sq.getTimestamp()))
+                .orElse(null);
+
+        return new ResumePointResponse(
+                sessionId,
+                new ResumePointResponse.ResumePage(
+                        stoppingPage.getId(),
+                        stoppingPage.getUrl(),
+                        stoppingPage.getDomain(),
+                        stoppingPage.getTitle(),
+                        stoppingPage.getLastVisited(),
+                        stoppingPage.getVisitCount()),
+                search);
     }
 
     public MindMapResponse getMindMap(String sessionId) {

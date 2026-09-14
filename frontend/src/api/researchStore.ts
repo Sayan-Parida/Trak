@@ -8,7 +8,8 @@ import {
   MindMapData, 
   ResearchGraphData, 
   ResearchSearchData,
-  ResearchSearchResult
+  ResearchSearchResult,
+  ResumePoint
 } from '../types';
 import { 
   INITIAL_SESSIONS, 
@@ -217,6 +218,44 @@ class ResearchStore {
         sourceUrl: t.url,
         timestamp: t.timestamp
       }));
+  }
+
+  private static isResearchUrl(url: string | null | undefined): boolean {
+    return typeof url === 'string' && url !== ''
+      && !url.startsWith('chrome://')
+      && !url.startsWith('chrome-extension://')
+      && !url.startsWith('about:');
+  }
+
+  public getResumePoint(sessionId: string): ResumePoint {
+    const pages = this.getPages(sessionId);
+    const stoppingPage = pages
+      .filter(p => ResearchStore.isResearchUrl(p.url) && p.title && p.title.trim() !== '')
+      .sort((a, b) =>
+        new Date(b.lastVisited).getTime() - new Date(a.lastVisited).getTime() ||
+        new Date(b.firstVisited).getTime() - new Date(a.firstVisited).getTime()
+      )[0] || null;
+
+    if (!stoppingPage) {
+      return { sessionId, page: null, search: null };
+    }
+
+    const graphNode = (this.graphs[sessionId]?.nodes || [])
+      .find(n => (n.type === 'PAGE' || n.type === 'SOURCE_PAPER')
+        && (n.url === stoppingPage.url || n.label === stoppingPage.title));
+
+    return {
+      sessionId,
+      page: {
+        id: graphNode?.id || stoppingPage.id,
+        url: stoppingPage.url,
+        domain: stoppingPage.domain || null,
+        title: stoppingPage.title,
+        lastVisited: stoppingPage.lastVisited,
+        visitCount: stoppingPage.visitCount
+      },
+      search: null
+    };
   }
 
   public async executeDeepResearch(

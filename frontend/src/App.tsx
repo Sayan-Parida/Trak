@@ -13,6 +13,7 @@ import PagesView from './components/PagesView';
 import ResearchSearch from './components/ResearchSearch';
 import NewSessionModal from './components/NewSessionModal';
 import ShortcutsModal from './components/ShortcutsModal';
+import ResumePanel from './components/ResumePanel';
 import { Theme, Session } from './types';
 import { apiClient } from './api/client';
 import { researchStore } from './api/researchStore';
@@ -92,6 +93,11 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
   }, []);
 
   const activeSession = sessions.find((s) => s.id === selectedSessionId);
+
+  const handleViewPath = useCallback((nodeId: string) => {
+    setFocusNodeId(nodeId);
+    setActiveTab('mindmap');
+  }, []);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)] font-sans select-none antialiased">
@@ -186,19 +192,9 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
                 </div>
               </div>
 
-              {/* Right: LAST KNOWN ACTIVITY pinned upper-right */}
+              {/* Right: RESUME RESEARCH pinned upper-right */}
               <div className="hidden shrink-0 lg:block">
-                <div className="b-panel max-w-52 px-3.5 py-3 text-right">
-                  <div className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-faint)]">
-                    Last known activity
-                  </div>
-                  <div className="mt-1.5 font-display text-sm font-bold text-[var(--text-primary)]">
-                    {activeSession.endTime ? formatSessionDate(activeSession.endTime) : 'Research in progress'}
-                  </div>
-                  <div className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
-                    {activeSession.endTime ? 'Session stopped here' : 'Trail is still active'}
-                  </div>
-                </div>
+                <ResumePanel sessionId={activeSession.id} onViewPath={handleViewPath} />
               </div>
             </div>
             {/* Stripe accent above the bottom rule */}
@@ -268,7 +264,11 @@ const [isSearchOpen, setIsSearchOpen] = useState(false);
             /* Active Views */
             <div key={activeTab} className="view-enter w-full h-full">
               {activeTab === 'mindmap' && (
-                <MindMap sessionId={selectedSessionId} focusNodeId={focusNodeId} />
+                <MindMap
+                  sessionId={selectedSessionId}
+                  focusNodeId={focusNodeId}
+                  onFocusNodeConsumed={() => setFocusNodeId(null)}
+                />
               )}
               {activeTab === 'timeline' && (
                 <Timeline 

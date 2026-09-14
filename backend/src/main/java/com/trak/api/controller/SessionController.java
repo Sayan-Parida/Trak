@@ -88,6 +88,11 @@ public class SessionController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/{id}/resume-point")
+    public ResponseEntity<ResumePointResponse> getResumePoint(@PathVariable String id) {
+        return ResponseEntity.ok(sessionService.getResumePoint(id));
+    }
+
     @GetMapping("/{id}/mindmap")
     public ResponseEntity<MindMapResponse> getMindMap(@PathVariable String id) {
         if (!sessionService.getSession(id).getId().equals(id)) {

@@ -180,6 +180,31 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
   await processEvent(event);
 });
 
+function isParseableHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+// Opens restored research tabs in study order. The stopping-point URL is
+// expected last and is opened active so it becomes the focused tab.
+async function restoreTabs(urls: string[], focusUrl: string | null): Promise<{ ok: boolean; count: number; error?: string }> {
+  try {
+    let count = 0;
+    for (const url of urls) {
+      if (!isParseableHttpUrl(url)) continue;
+      await chrome.tabs.create({ url, active: url === focusUrl });
+      count++;
+    }
+    return { ok: true, count };
+  } catch (error) {
+    return { ok: false, count: 0, error: error instanceof Error ? error.message : 'Failed to restore tabs' };
+  }
+}
+
 // Messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'GET_STATE') {
@@ -217,6 +242,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       sendResponse({ success: true });
     });
+    return true;
+  } else if (message.type === 'RESTORE_TABS') {
+    restoreTabs(message.urls || [], message.focusUrl ?? null).then((response) => sendResponse(response));
     return true;
   }
 });
